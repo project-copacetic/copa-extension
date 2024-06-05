@@ -1,6 +1,6 @@
 // src/App.tsx
 import React, { useState, useEffect } from 'react';
-import { Autocomplete, Button, Box, TextField, Stack, Typography, Paper, Divider, MenuItem, IconButton, Link } from '@mui/material';
+import { Autocomplete, Button, Box, TextField, Stack, Typography, Paper, Divider, MenuItem, IconButton, Link, Collapse, Grow, Fade, CircularProgress } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
@@ -11,7 +11,61 @@ export function App() {
   const [dockerImages, setDockerImages] = useState([] as string[]);
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [selectedScanner, setSelectedScanner] = React.useState<string | undefined>(undefined);
+  const [inSettings, setInSettings] = React.useState(false);
+  const [inLoading, setInLoading] = React.useState(false);
 
+  const patchImage = () => {
+    setInLoading(true);
+    triggerCopa();
+  }
+
+  const simplePage = (
+    <Fade in={!inLoading}>
+      <Stack spacing={2}>
+        <Autocomplete
+          disablePortal
+          value={selectedImage}
+          onChange={(event: any, newValue: string | null) => {
+            setSelectedImage(newValue);
+          }}
+          id="image-select-combo-box"
+          options={dockerImages}
+          sx={{ width: 300 }}
+          renderInput={(params) => <TextField {...params} label="Image" />}
+        />
+        <FormControl fullWidth>
+          <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
+          <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            value={selectedScanner}
+            label="Age"
+            onChange={(event: SelectChangeEvent) => {
+              setSelectedScanner(event.target.value as string);
+            }}
+          >
+            <MenuItem value={"trivy"}>Trivy</MenuItem>
+            <MenuItem value={"other"}>Other</MenuItem>
+          </Select>
+        </FormControl>
+        <Collapse in={inSettings}>
+          <Grow in={inSettings}>
+            <Stack spacing={2}>
+              <TextField id="outlined-basic" label="Patched Image Tag" variant="outlined" />
+              <TextField id="outlined-basic" label="Timeout" variant="outlined" />
+              <TextField id="outlined-basic" label="Output Filename" variant="outlined" />
+            </Stack>
+          </Grow>
+        </Collapse>
+        <Stack direction="row" spacing={2}>
+          <Button onClick={patchImage}>Patch image</Button>
+          <Button onClick={() => {
+            setInSettings(!inSettings);
+          }} >Settings</Button>
+        </Stack>
+      </Stack>
+    </Fade>
+  );
 
   useEffect(() => {
     //Runs only on the first render
@@ -50,39 +104,36 @@ export function App() {
   async function runCopa(commandParts: string[], stdout: string, stderr: string) {
     await ddClient.docker.cli.exec(
       "run", commandParts,
-      {
-        stream: {
-          onOutput(data: any) {
-            stdout += data.stdout;
-            if (data.stderr) {
-              stderr += data.stderr;
-            }
-          },
-          onError(error: any) {
-            console.error(error);
-          },
-          onClose(exitCode: number) {
-            var res = { stdout: stdout, stderr: stderr };
-            if (exitCode == 0) {
-              ddClient.desktopUI.toast.error(
-                `${res.stdout}`
-              );
-            } else {
-              ddClient.desktopUI.toast.error(
-                `${res.stderr}`
-              );
-            }
-          },
-        },
-      }
+      // {
+      //   stream: {
+      //     onOutput(data: any) {
+      //       stdout += data.stdout;
+      //       if (data.stderr) {
+      //         stderr += data.stderr;
+      //       }
+      //     },
+      //     onError(error: any) {
+      //       console.error(error);
+      //     },
+      //     onClose(exitCode: number) {
+      //       var res = { stdout: stdout, stderr: stderr };
+      //       alert("finished!");
+      //       if (exitCode == 0) {
+      //         ddClient.desktopUI.toast.error(
+      //           `${res.stdout}`
+      //         );
+      //       } else {
+      //         ddClient.desktopUI.toast.error(
+      //           `${res.stderr}`
+      //         );
+      //       }
+      //     },
+      //   },
+      // }
     );
+    setInLoading(false);
     return { stdout, stderr };
   }
-
-  const patchImage = () => {
-    triggerCopa();
-  }
-
 
   return (
     <Box
@@ -96,10 +147,10 @@ export function App() {
           <Box
             component="img"
             sx={{
-              height: 233,
-              width: 350,
-              maxHeight: { xs: 233, md: 167 },
-              maxWidth: { xs: 350, md: 250 },
+              height: 260,
+              width: 400,
+              maxHeight: { xs: 260, md: 167 },
+              maxWidth: { xs: 400, md: 250 },
             }}
             alt="The house from the offer."
             src="copa-color.png"
@@ -111,37 +162,15 @@ export function App() {
           <Link href="https://project-copacetic.github.io/copacetic/website/">LEARN MORE</Link>
         </Stack>
         <Divider orientation="vertical" variant="middle" flexItem />
-        <Stack spacing={2}>
-          <Autocomplete
-            disablePortal
-            value={selectedImage}
-            onChange={(event: any, newValue: string | null) => {
-              setSelectedImage(newValue);
-            }}
-            id="image-select-combo-box"
-            options={dockerImages}
-            sx={{ width: 300 }}
-            renderInput={(params) => <TextField {...params} label="Image" />}
-          />
-          <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={selectedScanner}
-              label="Age"
-              onChange={(event: SelectChangeEvent) => {
-                setSelectedScanner(event.target.value as string);
-              }}
-            >
-              <MenuItem value={"trivy"}>Trivy</MenuItem>
-              <MenuItem value={"other"}>Other</MenuItem>
-            </Select>
-          </FormControl>
+        {!inLoading && simplePage}
+        {inLoading &&
           <Stack direction="row">
-            <Button>Patch image</Button>
-          </Stack>
-        </Stack>
+            <Box
+              width={80}
+            >
+            </Box>
+            <CircularProgress size={150} />
+          </Stack>}
       </Stack>
     </Box>
   );

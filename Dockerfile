@@ -23,9 +23,9 @@ COPY ui /ui
 RUN npm run build
 
 FROM alpine
-LABEL org.opencontainers.image.title="My extension" \
-    org.opencontainers.image.description="My awesome Docker extension" \
-    org.opencontainers.image.vendor="Awesome Inc." \
+LABEL org.opencontainers.image.title="Copacetic" \
+    org.opencontainers.image.description="Copacetic Extension for Docker Desktop" \
+    org.opencontainers.image.vendor="Microsoft" \
     com.docker.desktop.extension.api.version="0.3.4" \
     com.docker.extension.screenshots="" \
     com.docker.desktop.extension.icon="" \
