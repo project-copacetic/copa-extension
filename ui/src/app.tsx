@@ -12,60 +12,15 @@ export function App() {
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [selectedScanner, setSelectedScanner] = React.useState<string | undefined>(undefined);
   const [inSettings, setInSettings] = React.useState(false);
-  const [inLoading, setInLoading] = React.useState(false);
+  const [showPreload, setShowPreload] = React.useState(true);
+  const [showLoading, setShowLoading] = React.useState(false);
+  const [showSuccess, setShowSuccess] = React.useState(false);
 
   const patchImage = () => {
-    setInLoading(true);
+    setShowPreload(false);
+    setShowLoading(true);
     triggerCopa();
   }
-
-  const simplePage = (
-    <Fade in={!inLoading}>
-      <Stack spacing={2}>
-        <Autocomplete
-          disablePortal
-          value={selectedImage}
-          onChange={(event: any, newValue: string | null) => {
-            setSelectedImage(newValue);
-          }}
-          id="image-select-combo-box"
-          options={dockerImages}
-          sx={{ width: 300 }}
-          renderInput={(params) => <TextField {...params} label="Image" />}
-        />
-        <FormControl fullWidth>
-          <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={selectedScanner}
-            label="Age"
-            onChange={(event: SelectChangeEvent) => {
-              setSelectedScanner(event.target.value as string);
-            }}
-          >
-            <MenuItem value={"trivy"}>Trivy</MenuItem>
-            <MenuItem value={"other"}>Other</MenuItem>
-          </Select>
-        </FormControl>
-        <Collapse in={inSettings}>
-          <Grow in={inSettings}>
-            <Stack spacing={2}>
-              <TextField id="outlined-basic" label="Patched Image Tag" variant="outlined" />
-              <TextField id="outlined-basic" label="Timeout" variant="outlined" />
-              <TextField id="outlined-basic" label="Output Filename" variant="outlined" />
-            </Stack>
-          </Grow>
-        </Collapse>
-        <Stack direction="row" spacing={2}>
-          <Button onClick={patchImage}>Patch image</Button>
-          <Button onClick={() => {
-            setInSettings(!inSettings);
-          }} >Settings</Button>
-        </Stack>
-      </Stack>
-    </Fade>
-  );
 
   useEffect(() => {
     //Runs only on the first render
@@ -116,12 +71,14 @@ export function App() {
             console.error(error);
           },
           onClose(exitCode: number) {
-            setInLoading(false);
+            setShowLoading(false);
+            setShowSuccess(true);
             var res = { stdout: stdout, stderr: stderr };
             if (exitCode == 0) {
               processResult(res);
+              ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${selectedImage}-patched`);
             } else {
-            
+
             }
           },
         },
@@ -130,9 +87,74 @@ export function App() {
     return { stdout, stderr };
   }
 
-  const processResult = (res : object) => {
-    
+  const processResult = (res: object) => {
+
   }
+
+  const successPage = (
+    <Stack sx={{ alignItems: 'center' }} spacing={1.5}>
+      <Box
+        component="img"
+        alt="celebration icon"
+        src="celebration-icon.png"
+      />
+      <Box>
+        <Typography align='center' variant="h6">Successfully patched image</Typography>
+        <Typography align='center' variant="h6">{selectedImage}!</Typography>
+      </Box>
+      <Button onClick={() => {
+        setShowSuccess(false);
+        setShowPreload(true);
+      }}>Return</Button>
+    </Stack>
+  );
+
+  const preRunPage = (
+    <Stack spacing={2}>
+      <Autocomplete
+        disablePortal
+        value={selectedImage}
+        onChange={(event: any, newValue: string | null) => {
+          setSelectedImage(newValue);
+        }}
+        id="image-select-combo-box"
+        options={dockerImages}
+        sx={{ width: 300 }}
+        renderInput={(params) => <TextField {...params} label="Image" />}
+      />
+      <FormControl fullWidth>
+        <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
+        <Select
+          labelId="demo-simple-select-label"
+          id="demo-simple-select"
+          value={selectedScanner}
+          label="Age"
+          onChange={(event: SelectChangeEvent) => {
+            setSelectedScanner(event.target.value as string);
+          }}
+        >
+          <MenuItem value={"trivy"}>Trivy</MenuItem>
+          <MenuItem value={"other"}>Other</MenuItem>
+        </Select>
+      </FormControl>
+      <Collapse in={inSettings}>
+        <Grow in={inSettings}>
+          <Stack spacing={2}>
+            <TextField id="outlined-basic" label="Patched Image Tag" variant="outlined" />
+            <TextField id="outlined-basic" label="Timeout" variant="outlined" />
+            <TextField id="outlined-basic" label="Output Filename" variant="outlined" />
+          </Stack>
+        </Grow>
+      </Collapse>
+      <Stack direction="row" spacing={2}>
+        <Button onClick={patchImage}>Patch image</Button>
+        <Button onClick={() => {
+          setInSettings(!inSettings);
+        }} >Settings</Button>
+      </Stack>
+    </Stack>
+  );
+
 
   return (
     <Box
@@ -155,15 +177,16 @@ export function App() {
           <Link href="https://project-copacetic.github.io/copacetic/website/">LEARN MORE</Link>
         </Stack>
         <Divider orientation="vertical" variant="middle" flexItem />
-        {!inLoading && simplePage}
-        {inLoading &&
+        {showPreload && preRunPage}
+        {showLoading &&
           <Stack direction="row">
             <Box
               width={80}
             >
             </Box>
-            <CircularProgress size={150} />
+            <CircularProgress size={100} />
           </Stack>}
+        {showSuccess && successPage}
       </Stack>
     </Box>
   );
