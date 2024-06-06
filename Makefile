@@ -1,4 +1,4 @@
-IMAGE?=my/awesome-extension
+IMAGE?=copacetic/copacetic-docker-desktop-extension
 TAG?=latest
 
 BUILDER=buildx-multi-arch

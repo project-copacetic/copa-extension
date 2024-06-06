@@ -104,35 +104,34 @@ export function App() {
   async function runCopa(commandParts: string[], stdout: string, stderr: string) {
     await ddClient.docker.cli.exec(
       "run", commandParts,
-      // {
-      //   stream: {
-      //     onOutput(data: any) {
-      //       stdout += data.stdout;
-      //       if (data.stderr) {
-      //         stderr += data.stderr;
-      //       }
-      //     },
-      //     onError(error: any) {
-      //       console.error(error);
-      //     },
-      //     onClose(exitCode: number) {
-      //       var res = { stdout: stdout, stderr: stderr };
-      //       alert("finished!");
-      //       if (exitCode == 0) {
-      //         ddClient.desktopUI.toast.error(
-      //           `${res.stdout}`
-      //         );
-      //       } else {
-      //         ddClient.desktopUI.toast.error(
-      //           `${res.stderr}`
-      //         );
-      //       }
-      //     },
-      //   },
-      // }
+      {
+        stream: {
+          onOutput(data: any) {
+            stdout += data.stdout;
+            if (data.stderr) {
+              stderr += data.stderr;
+            }
+          },
+          onError(error: any) {
+            console.error(error);
+          },
+          onClose(exitCode: number) {
+            setInLoading(false);
+            var res = { stdout: stdout, stderr: stderr };
+            if (exitCode == 0) {
+              processResult(res);
+            } else {
+            
+            }
+          },
+        },
+      }
     );
-    setInLoading(false);
     return { stdout, stderr };
+  }
+
+  const processResult = (res : object) => {
+    
   }
 
   return (
@@ -146,14 +145,8 @@ export function App() {
         <Stack sx={{ alignItems: 'center' }} spacing={1.5}>
           <Box
             component="img"
-            sx={{
-              height: 260,
-              width: 400,
-              maxHeight: { xs: 260, md: 167 },
-              maxWidth: { xs: 400, md: 250 },
-            }}
-            alt="The house from the offer."
-            src="copa-color.png"
+            alt="Copacetic logo"
+            src="copa-color-small.png"
           />
           <Stack>
             <Typography align='center' variant="h6">Directly patch containers quickly</Typography>

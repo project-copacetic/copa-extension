@@ -28,7 +28,7 @@ LABEL org.opencontainers.image.title="Copacetic" \
     org.opencontainers.image.vendor="Microsoft" \
     com.docker.desktop.extension.api.version="0.3.4" \
     com.docker.extension.screenshots="" \
-    com.docker.desktop.extension.icon="" \
+    com.docker.desktop.extension.icon="https://raw.githubusercontent.com/project-copacetic/copacetic/main/images/copa-color.png" \
     com.docker.extension.detailed-description="" \
     com.docker.extension.publisher-url="" \
     com.docker.extension.additional-urls="" \
@@ -38,6 +38,6 @@ LABEL org.opencontainers.image.title="Copacetic" \
 COPY --from=builder /backend/bin/service /
 COPY docker-compose.yaml .
 COPY metadata.json .
-COPY docker.svg .
+COPY copa-color.svg .
 COPY --from=client-builder /ui/build ui
 CMD /service -socket /run/guest-services/backend.sock
