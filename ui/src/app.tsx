@@ -1,11 +1,26 @@
 // src/App.tsx
 import React, { useState, useEffect } from 'react';
-import { Autocomplete, Button, Box, TextField, Stack, Typography, Paper, Divider, MenuItem, IconButton, Link, Collapse, Grow, Fade, CircularProgress } from '@mui/material';
+import {
+  Autocomplete,
+  Button,
+  Box,
+  TextField,
+  Stack,
+  Typography,
+  Paper,
+  Divider,
+  MenuItem,
+  IconButton,
+  Link,
+  Collapse,
+  Grow,
+  Fade,
+  CircularProgress
+} from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
-import { stderr } from 'process';
 
 export function App() {
   const ddClient = createDockerDesktopClient();
@@ -15,6 +30,7 @@ export function App() {
   const [selectedScanner, setSelectedScanner] = React.useState<string | undefined>(undefined);
   const [selectedImageTag, setSelectedImageTag] = React.useState<string | undefined>(undefined);
   const [selectedTimeout, setSelectedTimeout] = React.useState<string | undefined>(undefined);
+  const [currentStdout, setCurrentStdout] = React.useState("");
 
 
   const [inSettings, setInSettings] = React.useState(false);
@@ -27,6 +43,13 @@ export function App() {
     setShowPreload(false);
     setShowLoading(true);
     triggerCopa();
+  }
+
+  const clearInput = () => {
+    setSelectedImage(null);
+    setSelectedScanner(undefined);
+    setSelectedImageTag(undefined);
+    setSelectedTimeout(undefined);
   }
 
   useEffect(() => {
@@ -49,31 +72,34 @@ export function App() {
   async function triggerCopa() {
     let stdout = "";
     let stderr = "";
-
-
-    let commandParts: string[] = [
-      "--mount",
-      "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
-      // "--name=copa-extension",
-      "copa-extension",
-      `${selectedImage}`,
-      `${selectedImageTag === undefined ? `${selectedImage}-patched` : selectedImageTag}`,
-      `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
-      "buildx",
-      "openvex"
-    ];
-    ({ stdout, stderr } = await runCopa(commandParts, stdout, stderr));
+    if (selectedImage != null) {
+      let commandParts: string[] = [
+        "--mount",
+        "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
+        // "--name=copa-extension",
+        "copa-extension",
+        `${selectedImage}`,
+        `${selectedImageTag === undefined ? `${selectedImage.split(':')[1]}-patched` : selectedImageTag}`,
+        `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
+        "buildx",
+        "openvex"
+      ];
+      ({ stdout, stderr } = await runCopa(commandParts, stdout, stderr));
+    }
   }
 
   async function runCopa(commandParts: string[], stdout: string, stderr: string) {
+    let latestStdout: string = "";
     await ddClient.docker.cli.exec(
       "run", commandParts,
       {
         stream: {
           onOutput(data: any) {
             stdout += data.stdout;
+            setCurrentStdout(data.stdout);
             if (data.stderr) {
               stderr += data.stderr;
+              latestStdout = data.stderr;
             }
           },
           onError(error: any) {
@@ -88,7 +114,7 @@ export function App() {
               ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${selectedImage}-patched`);
             } else {
               setShowFailure(true);
-              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch ${selectedImage}: ${stderr}`);
+              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch ${selectedImage}: ${latestStdout}`);
             }
           },
         },
@@ -113,6 +139,7 @@ export function App() {
         <Typography align='center' variant="h6">{selectedImage}!</Typography>
       </Box>
       <Button onClick={() => {
+        clearInput();
         setShowSuccess(false);
         setShowPreload(true);
       }}>Return</Button>
@@ -123,14 +150,15 @@ export function App() {
     <Stack sx={{ alignItems: 'center' }} spacing={1.5}>
       <Box
         component="img"
-        alt="failure-icon"
-        src="celebration-icon.png"
+        alt="error icon"
+        src="error-icon.png"
       />
       <Box>
         <Typography align='center' variant="h6">Failed to patch {selectedImage}:</Typography>
         <Typography align='center' variant="h6">error here</Typography>
       </Box>
       <Button onClick={() => {
+        clearInput();
         setShowFailure(false);
         setShowPreload(true);
       }}>Return</Button>
@@ -140,9 +168,10 @@ export function App() {
   const preRunPage = (
     <Stack spacing={2}>
       <Autocomplete
+        freeSolo
         disablePortal
         value={selectedImage}
-        onChange={(event: any, newValue: string | null) => {
+        onInputChange={(event: any, newValue: string | null) => {
           setSelectedImage(newValue);
         }}
         id="image-select-combo-box"
@@ -220,12 +249,15 @@ export function App() {
         <Divider orientation="vertical" variant="middle" flexItem />
         {showPreload && preRunPage}
         {showLoading &&
-          <Stack direction="row">
+          <Stack direction="row" alignContent="center" alignItems="center">
             <Box
               width={80}
             >
             </Box>
-            <CircularProgress size={100} />
+            <Stack>
+              <CircularProgress size={100} />
+              <Typography align='center' sx={{maxWidth: 400}}>{currentStdout}</Typography>
+            </Stack>
           </Stack>}
         {showSuccess && successPage}
         {showFailure && failurePage}
