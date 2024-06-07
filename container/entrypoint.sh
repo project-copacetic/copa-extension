@@ -41,7 +41,7 @@ esac
 trivy image --vuln-type os --ignore-unfixed -f json -o scan.json $image
 
 # run copa to patch image
-if copa patch -i $image -r scan.json $connection --timeout $timeout $output;
+if copa patch -i $image -r scan.json -t "$patched_tag" $connection --timeout $timeout $output;
 then
     patched_image="$image_no_tag:$patched_tag"
     echo "patched-image=$patched_image"

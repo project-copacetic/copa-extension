@@ -5,16 +5,23 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
+import { stderr } from 'process';
 
 export function App() {
   const ddClient = createDockerDesktopClient();
   const [dockerImages, setDockerImages] = useState([] as string[]);
+
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [selectedScanner, setSelectedScanner] = React.useState<string | undefined>(undefined);
+  const [selectedImageTag, setSelectedImageTag] = React.useState<string | undefined>(undefined);
+  const [selectedTimeout, setSelectedTimeout] = React.useState<string | undefined>(undefined);
+
+
   const [inSettings, setInSettings] = React.useState(false);
   const [showPreload, setShowPreload] = React.useState(true);
   const [showLoading, setShowLoading] = React.useState(false);
   const [showSuccess, setShowSuccess] = React.useState(false);
+  const [showFailure, setShowFailure] = React.useState(false);
 
   const patchImage = () => {
     setShowPreload(false);
@@ -42,14 +49,16 @@ export function App() {
   async function triggerCopa() {
     let stdout = "";
     let stderr = "";
+
+
     let commandParts: string[] = [
       "--mount",
       "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
       // "--name=copa-extension",
       "copa-extension",
       `${selectedImage}`,
-      "patched",
-      "5m",
+      `${selectedImageTag === undefined ? `${selectedImage}-patched` : selectedImageTag}`,
+      `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
       "buildx",
       "openvex"
     ];
@@ -72,13 +81,14 @@ export function App() {
           },
           onClose(exitCode: number) {
             setShowLoading(false);
-            setShowSuccess(true);
             var res = { stdout: stdout, stderr: stderr };
             if (exitCode == 0) {
               processResult(res);
+              setShowSuccess(true);
               ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${selectedImage}-patched`);
             } else {
-
+              setShowFailure(true);
+              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch ${selectedImage}: ${stderr}`);
             }
           },
         },
@@ -108,6 +118,24 @@ export function App() {
       }}>Return</Button>
     </Stack>
   );
+
+  const failurePage = (
+    <Stack sx={{ alignItems: 'center' }} spacing={1.5}>
+      <Box
+        component="img"
+        alt="failure-icon"
+        src="celebration-icon.png"
+      />
+      <Box>
+        <Typography align='center' variant="h6">Failed to patch {selectedImage}:</Typography>
+        <Typography align='center' variant="h6">error here</Typography>
+      </Box>
+      <Button onClick={() => {
+        setShowFailure(false);
+        setShowPreload(true);
+      }}>Return</Button>
+    </Stack>
+  )
 
   const preRunPage = (
     <Stack spacing={2}>
@@ -140,9 +168,22 @@ export function App() {
       <Collapse in={inSettings}>
         <Grow in={inSettings}>
           <Stack spacing={2}>
-            <TextField id="outlined-basic" label="Patched Image Tag" variant="outlined" />
-            <TextField id="outlined-basic" label="Timeout" variant="outlined" />
-            <TextField id="outlined-basic" label="Output Filename" variant="outlined" />
+            <TextField
+              id="image-tag-input"
+              label="Patched Image Tag"
+              value={selectedImageTag}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                setSelectedImageTag(event.target.value);
+              }}
+            />
+            <TextField
+              id="timeout-input"
+              label="Timeout"
+              value={selectedTimeout}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                setSelectedTimeout(event.target.value);
+              }}
+            />
           </Stack>
         </Grow>
       </Collapse>
@@ -187,6 +228,7 @@ export function App() {
             <CircularProgress size={100} />
           </Stack>}
         {showSuccess && successPage}
+        {showFailure && failurePage}
       </Stack>
     </Box>
   );
