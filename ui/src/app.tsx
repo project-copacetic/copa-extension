@@ -4,27 +4,17 @@ import {
   Autocomplete,
   Button,
   Box,
-  TextField,
   Stack,
   Typography,
-  Paper,
   Divider,
-  MenuItem,
-  IconButton,
   Link,
-  Collapse,
-  Grow,
-  Fade,
   CircularProgress
 } from '@mui/material';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
+import { CopaInput } from './copainput';
 
 export function App() {
   const ddClient = createDockerDesktopClient();
-  const [dockerImages, setDockerImages] = useState([] as string[]);
 
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [selectedScanner, setSelectedScanner] = React.useState<string | undefined>(undefined);
@@ -51,23 +41,6 @@ export function App() {
     setSelectedImageTag(undefined);
     setSelectedTimeout(undefined);
   }
-
-  useEffect(() => {
-    //Runs only on the first render
-    const fetchData = async () => {
-      const imagesList = await ddClient.docker.listImages();
-      const listImages = (imagesList as []).map((images: any) => images.RepoTags)
-        .sort()
-        .filter((images: any) => images && "<none>:<none>" !== images[0])
-        .flat();
-
-      if (listImages.length == 0) {
-
-      }
-      setDockerImages(listImages);
-    }
-    fetchData();
-  }, []);
 
   async function triggerCopa() {
     let stdout = "";
@@ -165,67 +138,6 @@ export function App() {
     </Stack>
   )
 
-  const preRunPage = (
-    <Stack spacing={2}>
-      <Autocomplete
-        freeSolo
-        disablePortal
-        value={selectedImage}
-        onInputChange={(event: any, newValue: string | null) => {
-          setSelectedImage(newValue);
-        }}
-        id="image-select-combo-box"
-        options={dockerImages}
-        sx={{ width: 300 }}
-        renderInput={(params) => <TextField {...params} label="Image" />}
-      />
-      <FormControl fullWidth>
-        <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
-        <Select
-          labelId="demo-simple-select-label"
-          id="demo-simple-select"
-          value={selectedScanner}
-          label="Age"
-          onChange={(event: SelectChangeEvent) => {
-            setSelectedScanner(event.target.value as string);
-          }}
-        >
-          <MenuItem value={"trivy"}>Trivy</MenuItem>
-          <MenuItem value={"other"}>Other</MenuItem>
-        </Select>
-      </FormControl>
-      <Collapse in={inSettings}>
-        <Grow in={inSettings}>
-          <Stack spacing={2}>
-            <TextField
-              id="image-tag-input"
-              label="Patched Image Tag"
-              value={selectedImageTag}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                setSelectedImageTag(event.target.value);
-              }}
-            />
-            <TextField
-              id="timeout-input"
-              label="Timeout"
-              value={selectedTimeout}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                setSelectedTimeout(event.target.value);
-              }}
-            />
-          </Stack>
-        </Grow>
-      </Collapse>
-      <Stack direction="row" spacing={2}>
-        <Button onClick={patchImage}>Patch image</Button>
-        <Button onClick={() => {
-          setInSettings(!inSettings);
-        }} >Settings</Button>
-      </Stack>
-    </Stack>
-  );
-
-
   return (
     <Box
       display="flex"
@@ -247,7 +159,20 @@ export function App() {
           <Link href="https://project-copacetic.github.io/copacetic/website/">LEARN MORE</Link>
         </Stack>
         <Divider orientation="vertical" variant="middle" flexItem />
-        {showPreload && preRunPage}
+        {showPreload &&
+          <CopaInput
+            selectedImage={selectedImage}
+            setSelectedImage={setSelectedImage}
+            selectedScanner={selectedScanner}
+            setSelectedScanner={setSelectedScanner}
+            selectedImageTag={selectedImageTag}
+            setSelectedImageTag={setSelectedImageTag}
+            selectedTimeout={selectedTimeout}
+            setSelectedTimeout={setSelectedTimeout}
+            inSettings={inSettings}
+            setInSettings={setInSettings}
+            patchImage={patchImage}
+          />}
         {showLoading &&
           <Stack direction="row" alignContent="center" alignItems="center">
             <Box
@@ -256,7 +181,7 @@ export function App() {
             </Box>
             <Stack>
               <CircularProgress size={100} />
-              <Typography align='center' sx={{maxWidth: 400}}>{currentStdout}</Typography>
+              <Typography align='center' sx={{ maxWidth: 400 }}>{currentStdout}</Typography>
             </Stack>
           </Stack>}
         {showSuccess && successPage}
