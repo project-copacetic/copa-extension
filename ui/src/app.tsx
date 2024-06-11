@@ -8,7 +8,12 @@ import {
   Typography,
   Divider,
   Link,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { CopaInput } from './copainput';
@@ -20,7 +25,7 @@ export function App() {
   const [selectedScanner, setSelectedScanner] = React.useState<string | undefined>(undefined);
   const [selectedImageTag, setSelectedImageTag] = React.useState<string | undefined>(undefined);
   const [selectedTimeout, setSelectedTimeout] = React.useState<string | undefined>(undefined);
-  const [currentStdout, setCurrentStdout] = React.useState("");
+  const [totalStdout, setTotalStdout] = React.useState("");
 
 
   const [inSettings, setInSettings] = React.useState(false);
@@ -28,6 +33,9 @@ export function App() {
   const [showLoading, setShowLoading] = React.useState(false);
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [showFailure, setShowFailure] = React.useState(false);
+  const [showCopaOutputModal, setShowCopaOutputModal] = React.useState(false);
+
+
 
   const patchImage = () => {
     setShowPreload(false);
@@ -68,18 +76,19 @@ export function App() {
       {
         stream: {
           onOutput(data: any) {
-            stdout += data.stdout;
-            setCurrentStdout(data.stdout);
+            stdout += (data.stdout + "\n");
             if (data.stderr) {
               stderr += data.stderr;
               latestStdout = data.stderr;
             }
           },
           onError(error: any) {
+            setTotalStdout(stdout);
             console.error(error);
           },
           onClose(exitCode: number) {
             setShowLoading(false);
+            setTotalStdout(stdout);
             var res = { stdout: stdout, stderr: stderr };
             if (exitCode == 0) {
               processResult(res);
@@ -100,6 +109,19 @@ export function App() {
 
   }
 
+  const loadingPage = (
+    <Stack direction="row" alignContent="center" alignItems="center">
+      <Box
+        width={80}
+      >
+      </Box>
+      <Stack>
+        <CircularProgress size={100} />
+        <Typography align='center' variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
+      </Stack>
+    </Stack>
+  )
+
   const successPage = (
     <Stack sx={{ alignItems: 'center' }} spacing={1.5}>
       <Box
@@ -111,11 +133,14 @@ export function App() {
         <Typography align='center' variant="h6">Successfully patched image</Typography>
         <Typography align='center' variant="h6">{selectedImage}!</Typography>
       </Box>
-      <Button onClick={() => {
-        clearInput();
-        setShowSuccess(false);
-        setShowPreload(true);
-      }}>Return</Button>
+      <Stack direction="row" spacing={2}>
+        <Button onClick={() => {
+          clearInput();
+          setShowSuccess(false);
+          setShowPreload(true);
+        }}>Return</Button>
+        <Button onClick={() => { setShowCopaOutputModal(true) }}>Show Copa Output</Button>
+      </Stack>
     </Stack>
   );
 
@@ -130,11 +155,14 @@ export function App() {
         <Typography align='center' variant="h6">Failed to patch {selectedImage}:</Typography>
         <Typography align='center' variant="h6">error here</Typography>
       </Box>
-      <Button onClick={() => {
-        clearInput();
-        setShowFailure(false);
-        setShowPreload(true);
-      }}>Return</Button>
+      <Stack direction="row" spacing={2}>
+        <Button onClick={() => {
+          clearInput();
+          setShowFailure(false);
+          setShowPreload(true);
+        }}>Return</Button>
+        <Button onClick={() => { setShowCopaOutputModal(true) }}>Show Copa Output</Button>
+      </Stack>
     </Stack>
   )
 
@@ -173,19 +201,31 @@ export function App() {
             setInSettings={setInSettings}
             patchImage={patchImage}
           />}
-        {showLoading &&
-          <Stack direction="row" alignContent="center" alignItems="center">
-            <Box
-              width={80}
-            >
-            </Box>
-            <Stack>
-              <CircularProgress size={100} />
-              <Typography align='center' sx={{ maxWidth: 400 }}>{currentStdout}</Typography>
-            </Stack>
-          </Stack>}
+        {showLoading && loadingPage}
         {showSuccess && successPage}
         {showFailure && failurePage}
+        <Dialog
+          open={showCopaOutputModal}
+          onClose={() => { setShowCopaOutputModal(false) }}
+          scroll='paper'
+          aria-labelledby="scroll-dialog-title"
+          aria-describedby="scroll-dialog-description"
+          maxWidth='xl'
+          fullWidth
+        >
+          <DialogTitle id="scroll-dialog-title">Copa Output</DialogTitle>
+          <DialogContent dividers={true}>
+            <DialogContentText
+              id="scroll-dialog-description"
+              tabIndex={-1}
+            >
+              {totalStdout}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setShowCopaOutputModal(false) }}>Back</Button>
+          </DialogActions>
+        </Dialog>
       </Stack>
     </Box>
   );

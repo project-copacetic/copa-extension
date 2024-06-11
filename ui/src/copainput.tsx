@@ -26,6 +26,11 @@ export function CopaInput(props: any) {
   const ddClient = createDockerDesktopClient();
   const [dockerImages, setDockerImages] = useState([] as string[]);
 
+  const [selectedImageError, setSelectedImageError] = useState(false);
+  const [selectedImageHelperText, setSelectedImageHelperText] = useState("");
+  const [copaVersion, setCopaVerison] = useState("");
+  const [trivyVersion, setTrivyVerison] = useState("");
+
   useEffect(() => {
     //Runs only on the first render
     const fetchData = async () => {
@@ -43,6 +48,30 @@ export function CopaInput(props: any) {
     fetchData();
   }, []);
 
+
+  const hasWhiteSpace = (s: string) => {
+    return s.indexOf(' ') >= 0;
+  }
+
+  const validateInput = () => {
+    let foundError: boolean = false;
+    if (props.selectedImage === null || props.selectedImage.length === 0) {
+      foundError = true;
+      setSelectedImageHelperText("Image input can not be empty.");
+    } else if (hasWhiteSpace(props.selectedImage)) {
+      foundError = true;
+      setSelectedImageHelperText("Image input can not have whitespace.")
+    }
+
+    if (foundError) {
+      setSelectedImageError(true);
+    } else {
+      setSelectedImageError(false);
+      props.patchImage();
+    }
+
+  }
+
   return (
     <Stack spacing={2}>
       <Autocomplete
@@ -55,7 +84,13 @@ export function CopaInput(props: any) {
         id="image-select-combo-box"
         options={dockerImages}
         sx={{ width: 300 }}
-        renderInput={(params) => <TextField {...params} label="Image" error={true} helperText="test" />}
+        renderInput={(params) =>
+          <TextField
+            {...params}
+            label="Image"
+            error={selectedImageError}
+            helperText={selectedImageHelperText}
+          />}
       />
       <FormControl fullWidth>
         <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
@@ -69,7 +104,6 @@ export function CopaInput(props: any) {
           }}
         >
           <MenuItem value={"trivy"}>Trivy</MenuItem>
-          <MenuItem value={"other"}>Other</MenuItem>
         </Select>
       </FormControl>
       <Collapse in={props.inSettings}>
@@ -91,11 +125,36 @@ export function CopaInput(props: any) {
                 props.setSelectedTimeout(event.target.value);
               }}
             />
+            <Stack spacing={2} direction="row">
+              <FormControl fullWidth>
+                <InputLabel id="copa-version-label">Copa Version</InputLabel>
+                <Select
+                  label="Copaversion"
+                  labelId="copa-version"
+                  onChange={(event: SelectChangeEvent) => {
+                    setCopaVerison(event.target.value as string);
+                  }}
+                >
+                  <MenuItem value={0}>Latest</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel id="trivy-verison-label">Trivy Version</InputLabel>
+                <Select
+                  label="Trivvyversion"
+                  onChange={(event: SelectChangeEvent) => {
+                    setTrivyVerison(event.target.value as string);
+                  }}
+                >
+                  <MenuItem value={0}>Latest</MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
           </Stack>
         </Grow>
       </Collapse>
       <Stack direction="row" spacing={2}>
-        <Button onClick={props.patchImage}>Patch image</Button>
+        <Button onClick={validateInput}>Patch image</Button>
         <Button onClick={() => {
           props.setInSettings(!props.inSettings);
         }} >Settings</Button>
