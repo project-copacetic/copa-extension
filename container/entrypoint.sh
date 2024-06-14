@@ -38,6 +38,8 @@ case "$connection_format" in
     ;;
 esac
 
+
+# run trivy to generate scan for image
 trivy image --vuln-type os --ignore-unfixed -f json -o scan.json $image
 
 # run copa to patch image

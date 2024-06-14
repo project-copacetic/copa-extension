@@ -15,39 +15,52 @@ import {
   Collapse,
   Grow,
   Fade,
-  CircularProgress
+  CircularProgress,
+  FormControlLabel,
+  Switch,
+  Tooltip
 } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
+import InfoIcon from '@mui/icons-material/Info';
 export function CopaInput(props: any) {
 
   const ddClient = createDockerDesktopClient();
   const [dockerImages, setDockerImages] = useState([] as string[]);
 
+
   const [selectedImageError, setSelectedImageError] = useState(false);
   const [selectedImageHelperText, setSelectedImageHelperText] = useState("");
+  const [selectImageLabel, setSelectImageLabel] = useState("Remote Images");
   const [copaVersion, setCopaVerison] = useState("");
   const [trivyVersion, setTrivyVerison] = useState("");
+  const [showLocalImageschecked, setShowLocalImagesChecked] = React.useState(false);
+
+  const fetchData = async () => {
+    const imagesList = await ddClient.docker.listImages();
+    const listImages = (imagesList as []).map((images: any) => images.RepoTags)
+      .sort()
+      .filter((images: any) => images && "<none>:<none>" !== images[0])
+      .flat();
+
+    if (listImages.length == 0) {
+
+    }
+    setDockerImages(listImages);
+  }
 
   useEffect(() => {
-    //Runs only on the first render
-    const fetchData = async () => {
-      const imagesList = await ddClient.docker.listImages();
-      const listImages = (imagesList as []).map((images: any) => images.RepoTags)
-        .sort()
-        .filter((images: any) => images && "<none>:<none>" !== images[0])
-        .flat();
-
-      if (listImages.length == 0) {
-
-      }
-      setDockerImages(listImages);
+    props.setSelectedImage("");
+    if (showLocalImageschecked) {
+      fetchData();
+      setSelectImageLabel("Local Image");
+    } else {
+      setDockerImages([]);
+      setSelectImageLabel("Remote Image")
     }
-    fetchData();
-  }, []);
-
+  }, [showLocalImageschecked]);
 
   const hasWhiteSpace = (s: string) => {
     return s.indexOf(' ') >= 0;
@@ -63,6 +76,19 @@ export function CopaInput(props: any) {
       setSelectedImageHelperText("Image input can not have whitespace.")
     }
 
+    let seperateSplit = props.selectedImage.split(':');
+    let numColons = seperateSplit.length - 1;
+
+    if (numColons > 1) {
+      foundError = true;
+      setSelectedImageHelperText("Image input can only have one colon.");
+    } else {
+      if (seperateSplit[0].length === 0) {
+        foundError = true;
+        setSelectedImageHelperText("Image input can not be a tag only.")
+      }
+    }
+
     if (foundError) {
       setSelectedImageError(true);
     } else {
@@ -71,6 +97,10 @@ export function CopaInput(props: any) {
     }
 
   }
+
+  const handleLocalImageSwitchChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setShowLocalImagesChecked(event.target.checked);
+  };
 
   return (
     <Stack spacing={2}>
@@ -87,11 +117,25 @@ export function CopaInput(props: any) {
         renderInput={(params) =>
           <TextField
             {...params}
-            label="Image"
+            label={selectImageLabel}
             error={selectedImageError}
             helperText={selectedImageHelperText}
           />}
       />
+      <Stack direction="row">
+        <FormControlLabel control={
+          <Switch
+            checked={showLocalImageschecked}
+            onChange={handleLocalImageSwitchChecked}
+          />
+        } label="Containerd enabled" />
+        <Tooltip title={"If you're scanning and patching an image that is local-only" +
+          " (i.e. built or tagged locally but not pushed to a registry), copa is limited" +
+          " to using docker's built-in buildkit service, and must use the containerd" +
+          " image store feature."}>
+          <InfoIcon />
+        </Tooltip>
+      </Stack>
       <FormControl fullWidth>
         <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
         <Select
@@ -104,6 +148,7 @@ export function CopaInput(props: any) {
           }}
         >
           <MenuItem value={"trivy"}>Trivy</MenuItem>
+          <MenuItem value={"no-scanner"}>No Scanner</MenuItem>
         </Select>
       </FormControl>
       <Collapse in={props.inSettings}>
