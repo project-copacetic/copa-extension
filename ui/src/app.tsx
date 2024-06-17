@@ -34,6 +34,7 @@ export function App() {
   const [totalStdout, setTotalStdout] = useState("");
   const [actualImageTag, setActualImageTag] = useState("");
   const [errorText, setErrorText] = useState("");
+  const [useContainerdChecked, setUseContainerdChecked] = React.useState(false);
 
 
   const [inSettings, setInSettings] = useState(false);
@@ -57,6 +58,8 @@ export function App() {
     setSelectedScanner(undefined);
     setSelectedImageTag(undefined);
     setSelectedTimeout(undefined);
+    setTotalStdout("");
+    setActualImageTag("");
   }
 
   const processError = (error: string) => {
@@ -95,7 +98,7 @@ export function App() {
         `${selectedImage}`,
         `${imageTag}`,
         `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
-        "custom-socket",
+        `${useContainerdChecked ? 'custom-socket' : 'buildx'}`,
         "openvex"
       ];
       ({ stdout, stderr } = await runCopa(commandParts, stdout, stderr));
@@ -128,9 +131,7 @@ export function App() {
               ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${selectedImage}-${actualImageTag}`);
             } else {
               setShowFailure(true);
-              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch ${selectedImage}: ${latestStderr}`);
-              alert(stdout);
-              alert(stderr);
+              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch ${selectedImage}: ${stderr}`);
               processError(latestStderr);
             }
           },
@@ -150,7 +151,7 @@ export function App() {
         <CircularProgress size={100} />
         <Stack direction="row">
           <IconButton aria-label="show-command-line" onClick={() => { setShowCommandLine(!showCommandLine) }}>
-            { showCommandLine ? <ExpandMoreIcon/> : <ChevronRightIcon/>}
+            {showCommandLine ? <ExpandMoreIcon /> : <ChevronRightIcon />}
           </IconButton>
           <Typography variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
         </Stack>
@@ -243,6 +244,8 @@ export function App() {
             inSettings={inSettings}
             setInSettings={setInSettings}
             patchImage={patchImage}
+            useContainerdChecked={useContainerdChecked}
+            setUseContainerdChecked={setUseContainerdChecked}
           />}
         {showLoading && loadingPage}
         {showSuccess && successPage}

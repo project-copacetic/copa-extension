@@ -36,7 +36,6 @@ export function CopaInput(props: any) {
   const [selectImageLabel, setSelectImageLabel] = useState("Remote Images");
   const [copaVersion, setCopaVerison] = useState("");
   const [trivyVersion, setTrivyVerison] = useState("");
-  const [showLocalImageschecked, setShowLocalImagesChecked] = React.useState(false);
 
   const fetchData = async () => {
     const imagesList = await ddClient.docker.listImages();
@@ -53,14 +52,14 @@ export function CopaInput(props: any) {
 
   useEffect(() => {
     props.setSelectedImage("");
-    if (showLocalImageschecked) {
+    if (props.useContainerdChecked) {
       fetchData();
       setSelectImageLabel("Local Image");
     } else {
       setDockerImages([]);
       setSelectImageLabel("Remote Image")
     }
-  }, [showLocalImageschecked]);
+  }, [props.useContainerdChecked]);
 
   const hasWhiteSpace = (s: string) => {
     return s.indexOf(' ') >= 0;
@@ -99,7 +98,7 @@ export function CopaInput(props: any) {
   }
 
   const handleLocalImageSwitchChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setShowLocalImagesChecked(event.target.checked);
+    props.setUseContainerdChecked(event.target.checked);
   };
 
   return (
@@ -122,20 +121,6 @@ export function CopaInput(props: any) {
             helperText={selectedImageHelperText}
           />}
       />
-      <Stack direction="row">
-        <FormControlLabel control={
-          <Switch
-            checked={showLocalImageschecked}
-            onChange={handleLocalImageSwitchChecked}
-          />
-        } label="Containerd enabled" />
-        <Tooltip title={"If you're scanning and patching an image that is local-only" +
-          " (i.e. built or tagged locally but not pushed to a registry), copa is limited" +
-          " to using docker's built-in buildkit service, and must use the containerd" +
-          " image store feature."}>
-          <InfoIcon />
-        </Tooltip>
-      </Stack>
       <FormControl fullWidth>
         <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
         <Select
@@ -194,6 +179,20 @@ export function CopaInput(props: any) {
                   <MenuItem value={0}>Latest</MenuItem>
                 </Select>
               </FormControl>
+            </Stack>
+            <Stack direction="row">
+              <FormControlLabel control={
+                <Switch
+                  checked={props.useContainerdChecked}
+                  onChange={handleLocalImageSwitchChecked}
+                />
+              } label="Containerd image store" />
+              <Tooltip title={"If you're scanning and patching an image that is local-only" +
+                " (i.e. built or tagged locally but not pushed to a registry), copa is limited" +
+                " to using docker's built-in buildkit service, and must use the containerd" +
+                " image store feature."}>
+                <InfoIcon />
+              </Tooltip>
             </Stack>
           </Stack>
         </Grow>
