@@ -9,7 +9,7 @@ export function CommandLine(props: any) {
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView();
-    }, [props.totalStdout]);
+    }, [props.totalOutput]);
 
     return (
         <Paper
@@ -29,7 +29,7 @@ export function CommandLine(props: any) {
                 minWidth: '50vw'
             }}
         >
-            <Typography>{props.totalStdout}</Typography>
+            <Typography>{props.totalOutput}</Typography>
             <div ref={bottomRef}></div>
         </Paper>
     );

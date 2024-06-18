@@ -54,7 +54,7 @@ export function CopaInput(props: any) {
     props.setSelectedImage("");
     if (props.useContainerdChecked) {
       fetchData();
-      setSelectImageLabel("Local Image");
+      setSelectImageLabel("Local Image / Remote Image");
     } else {
       setDockerImages([]);
       setSelectImageLabel("Remote Image")
@@ -122,12 +122,12 @@ export function CopaInput(props: any) {
           />}
       />
       <FormControl fullWidth>
-        <InputLabel id="demo-simple-select-label">Scanner</InputLabel>
+        <InputLabel id="demo-simple-select-label" variant='outlined'>Scanner</InputLabel>
         <Select
           labelId="demo-simple-select-label"
           id="demo-simple-select"
           value={props.selectedScanner}
-          label="Age"
+          label="Scanner"
           onChange={(event: SelectChangeEvent) => {
             props.setSelectedScanner(event.target.value as string);
           }}
@@ -155,12 +155,12 @@ export function CopaInput(props: any) {
                 props.setSelectedTimeout(event.target.value);
               }}
             />
-            <Stack spacing={2} direction="row">
+            <Box display="flex" gap={2}>
               <FormControl fullWidth>
                 <InputLabel id="copa-version-label">Copa Version</InputLabel>
                 <Select
-                  label="Copaversion"
-                  labelId="copa-version"
+                  label="Copa Version"
+                  labelId="copa-version-label"
                   onChange={(event: SelectChangeEvent) => {
                     setCopaVerison(event.target.value as string);
                   }}
@@ -171,7 +171,8 @@ export function CopaInput(props: any) {
               <FormControl fullWidth>
                 <InputLabel id="trivy-verison-label">Trivy Version</InputLabel>
                 <Select
-                  label="Trivvyversion"
+                  label="Trivy Version"
+                  labelId='trivy-version-label'
                   onChange={(event: SelectChangeEvent) => {
                     setTrivyVerison(event.target.value as string);
                   }}
@@ -179,7 +180,7 @@ export function CopaInput(props: any) {
                   <MenuItem value={0}>Latest</MenuItem>
                 </Select>
               </FormControl>
-            </Stack>
+            </Box>
             <Stack direction="row">
               <FormControlLabel control={
                 <Switch
@@ -191,7 +192,11 @@ export function CopaInput(props: any) {
                 " (i.e. built or tagged locally but not pushed to a registry), copa is limited" +
                 " to using docker's built-in buildkit service, and must use the containerd" +
                 " image store feature."}>
-                <InfoIcon />
+                <IconButton onClick={() => {
+                  ddClient.host.openExternal("https://docs.docker.com/desktop/containerd/")
+                }}>
+                  <InfoIcon />
+                </IconButton>
               </Tooltip>
             </Stack>
           </Stack>
