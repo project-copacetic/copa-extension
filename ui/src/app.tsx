@@ -45,10 +45,6 @@ export function App() {
   const [showCopaOutputModal, setShowCopaOutputModal] = useState(false);
   const [showCommandLine, setShowCommandLine] = useState(false);
 
-  useEffect(() => {
-    fetchCopaVersions();
-  }, []);
-
   const patchImage = () => {
     setShowPreload(false);
     setShowLoading(true);
@@ -73,12 +69,6 @@ export function App() {
       setErrorText("Undefined error.");
     }
   }
-
-  async function fetchCopaVersions() {
-    const response = await fetch("https://api.github.com/repos/project-copacetic/copacetic/releases");
-    const data = await response.json();
-  }
-
 
   async function triggerCopa() {
     let stdout = "";
