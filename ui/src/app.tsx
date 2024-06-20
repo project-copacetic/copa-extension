@@ -126,9 +126,6 @@ export function App() {
             }
             setTotalOutput(tOutput);
           },
-          onError(error: any) {
-            // Not sure what do to with this.
-          },
           onClose(exitCode: number) {
             setShowLoading(false);
             if (exitCode == 0) {
