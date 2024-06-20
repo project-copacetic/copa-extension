@@ -133,7 +133,6 @@ export function CopaInput(props: any) {
           }}
         >
           <MenuItem value={"trivy"}>Trivy</MenuItem>
-          <MenuItem value={"no-scanner"}>No Scanner</MenuItem>
         </Select>
       </FormControl>
       <Collapse in={props.inSettings}>
