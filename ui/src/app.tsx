@@ -67,7 +67,7 @@ export function App() {
     } else if (error.indexOf("No such image") >= 0) {
       setErrorText("Image does not exist.");
     } else {
-      setErrorText("Undefined error.");
+      setErrorText("An unexpected error occurred.");
     }
   }
 
