@@ -26,6 +26,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 export function App() {
   const ddClient = createDockerDesktopClient();
+  const learnMoreLink = "https://project-copacetic.github.io/copacetic/website/";
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedScanner, setSelectedScanner] = useState<string | undefined>(undefined);
@@ -240,9 +241,7 @@ export function App() {
             <Typography align='center' variant="h6">without going upstream for a full rebuild.</Typography>
           </Stack>
           <Link onClick={() => {
-            ddClient.host.openExternal(
-              "https://project-copacetic.github.io/copacetic/website/"
-            )
+            ddClient.host.openExternal(learnMoreLink)
           }}>LEARN MORE</Link>
         </Stack>
         <Divider orientation="vertical" variant="middle" flexItem />
