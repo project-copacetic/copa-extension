@@ -187,11 +187,9 @@ export function CopaInput(props: any) {
                   checked={props.useContainerdChecked}
                   onChange={handleLocalImageSwitchChecked}
                 />
-              } label="Containerd image store" />
-              <Tooltip title={"If you're scanning and patching an image that is local-only" +
-                " (i.e. built or tagged locally but not pushed to a registry), copa is limited" +
-                " to using docker's built-in buildkit service, and must use the containerd" +
-                " image store feature."}>
+              } label="Using containerd image store" />
+              <Tooltip title={"Turn on if using containerd image store, which allows patching of "
+                + "local images (i.e. built or tagged locally but not pushed to a registry)."}>
                 <IconButton onClick={() => {
                   ddClient.host.openExternal("https://docs.docker.com/desktop/containerd/")
                 }}>
