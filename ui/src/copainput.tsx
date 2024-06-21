@@ -29,13 +29,9 @@ export function CopaInput(props: any) {
 
   const ddClient = createDockerDesktopClient();
   const [dockerImages, setDockerImages] = useState([] as string[]);
-
-
   const [selectedImageError, setSelectedImageError] = useState(false);
   const [selectedImageHelperText, setSelectedImageHelperText] = useState("");
   const [selectImageLabel, setSelectImageLabel] = useState("Remote Images");
-  const [copaVersion, setCopaVerison] = useState("");
-  const [trivyVersion, setTrivyVerison] = useState("");
 
   const fetchData = async () => {
     const imagesList = await ddClient.docker.listImages();
@@ -154,32 +150,6 @@ export function CopaInput(props: any) {
                 props.setSelectedTimeout(event.target.value);
               }}
             />
-            <Box display="flex" gap={2}>
-              <FormControl fullWidth>
-                <InputLabel id="copa-version-label">Copa Version</InputLabel>
-                <Select
-                  label="Copa Version"
-                  labelId="copa-version-label"
-                  onChange={(event: SelectChangeEvent) => {
-                    setCopaVerison(event.target.value as string);
-                  }}
-                >
-                  <MenuItem value={0}>Latest</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel id="trivy-verison-label">Trivy Version</InputLabel>
-                <Select
-                  label="Trivy Version"
-                  labelId='trivy-version-label'
-                  onChange={(event: SelectChangeEvent) => {
-                    setTrivyVerison(event.target.value as string);
-                  }}
-                >
-                  <MenuItem value={0}>Latest</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
             <Stack direction="row">
               <FormControlLabel control={
                 <Switch
