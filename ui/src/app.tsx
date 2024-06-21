@@ -29,7 +29,7 @@ export function App() {
   const learnMoreLink = "https://project-copacetic.github.io/copacetic/website/";
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedScanner, setSelectedScanner] = useState<string | undefined>(undefined);
+  const [selectedScanner, setSelectedScanner] = useState<string | undefined>("trivy");
   const [selectedImageTag, setSelectedImageTag] = useState<string | undefined>(undefined);
   const [selectedTimeout, setSelectedTimeout] = useState<string | undefined>(undefined);
   const [totalOutput, setTotalOutput] = useState("");
