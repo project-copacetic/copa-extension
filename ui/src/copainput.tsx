@@ -105,6 +105,15 @@ export function CopaInput(props: any) {
         value={props.selectedImage}
         onInputChange={(event: any, newValue: string | null) => {
           props.setSelectedImage(newValue);
+          if (newValue !== null) { 
+            const seperateSplit = newValue?.split(':');
+            const numColons = seperateSplit.length - 1;
+            if (numColons === 0) { 
+              props.setImageName(newValue + ":latest");
+            } else {
+              props.setImageName(newValue);
+            }
+          }
         }}
         id="image-select-combo-box"
         options={dockerImages}

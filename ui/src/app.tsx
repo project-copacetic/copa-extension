@@ -28,6 +28,10 @@ export function App() {
   const ddClient = createDockerDesktopClient();
   const learnMoreLink = "https://project-copacetic.github.io/copacetic/website/";
 
+  // The correct image name of the currently selected image. The latest tag is added if there is no tag.
+  const [imageName, setImageName] = useState("");
+
+
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedScanner, setSelectedScanner] = useState<string | undefined>("trivy");
   const [selectedImageTag, setSelectedImageTag] = useState<string | undefined>(undefined);
@@ -45,6 +49,7 @@ export function App() {
   const [showFailure, setShowFailure] = useState(false);
   const [showCopaOutputModal, setShowCopaOutputModal] = useState(false);
   const [showCommandLine, setShowCommandLine] = useState(false);
+  
 
   const patchImage = () => {
     setShowPreload(false);
@@ -58,6 +63,7 @@ export function App() {
     setSelectedImageTag(undefined);
     setSelectedTimeout(undefined);
     setTotalOutput("");
+    setImageName("");
     setActualImageTag("");
   }
 
@@ -134,7 +140,7 @@ export function App() {
               ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${selectedImage}-${actualImageTag}`);
             } else {
               setShowFailure(true);
-              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch image ${selectedImage}`);
+              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch image ${imageName}`);
               processError(latestStderr);
             }
           },
@@ -180,7 +186,7 @@ export function App() {
         <Typography align='center' variant="h6">Successfully patched image</Typography>
         <Stack direction="row">
           {showCommandLineButton}
-          <Typography align='center' variant="h6">{selectedImage}!</Typography>
+          <Typography align='center' variant="h6">{imageName}!</Typography>
         </Stack>
       </Stack>
       <Button
@@ -205,7 +211,7 @@ export function App() {
         src="error-icon.png"
       />
       <Stack sx={{ alignItems: 'center' }} >
-        <Typography align='center' variant="h6">Failed to patch {selectedImage}:</Typography>
+        <Typography align='center' variant="h6">Failed to patch {imageName}</Typography>
         <Stack direction="row">
           {showCommandLineButton}
           <Typography align='center' variant="h6">{errorText}</Typography>
@@ -260,6 +266,8 @@ export function App() {
             patchImage={patchImage}
             useContainerdChecked={useContainerdChecked}
             setUseContainerdChecked={setUseContainerdChecked}
+            imageName={imageName}
+            setImageName={setImageName}
           />}
         {showLoading && loadingPage}
         {showSuccess && successPage}
