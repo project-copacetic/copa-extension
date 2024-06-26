@@ -13,29 +13,43 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogActions
+  DialogActions,
+  IconButton,
+  Grow,
+  Collapse
 } from '@mui/material';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { CopaInput } from './copainput';
+import { CommandLine } from './commandline';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 export function App() {
   const ddClient = createDockerDesktopClient();
+  const learnMoreLink = "https://project-copacetic.github.io/copacetic/website/";
 
-  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
-  const [selectedScanner, setSelectedScanner] = React.useState<string | undefined>(undefined);
-  const [selectedImageTag, setSelectedImageTag] = React.useState<string | undefined>(undefined);
-  const [selectedTimeout, setSelectedTimeout] = React.useState<string | undefined>(undefined);
-  const [totalStdout, setTotalStdout] = React.useState("");
+  // The correct image name of the currently selected image. The latest tag is added if there is no tag.
+  const [imageName, setImageName] = useState("");
 
 
-  const [inSettings, setInSettings] = React.useState(false);
-  const [showPreload, setShowPreload] = React.useState(true);
-  const [showLoading, setShowLoading] = React.useState(false);
-  const [showSuccess, setShowSuccess] = React.useState(false);
-  const [showFailure, setShowFailure] = React.useState(false);
-  const [showCopaOutputModal, setShowCopaOutputModal] = React.useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedScanner, setSelectedScanner] = useState<string | undefined>("trivy");
+  const [selectedImageTag, setSelectedImageTag] = useState<string | undefined>(undefined);
+  const [selectedTimeout, setSelectedTimeout] = useState<string | undefined>(undefined);
+  const [totalOutput, setTotalOutput] = useState("");
+  const [actualImageTag, setActualImageTag] = useState("");
+  const [errorText, setErrorText] = useState("");
+  const [useContainerdChecked, setUseContainerdChecked] = React.useState(false);
 
 
+  const [inSettings, setInSettings] = useState(false);
+  const [showPreload, setShowPreload] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showFailure, setShowFailure] = useState(false);
+  const [showCopaOutputModal, setShowCopaOutputModal] = useState(false);
+  const [showCommandLine, setShowCommandLine] = useState(false);
+  
 
   const patchImage = () => {
     setShowPreload(false);
@@ -48,11 +62,40 @@ export function App() {
     setSelectedScanner(undefined);
     setSelectedImageTag(undefined);
     setSelectedTimeout(undefined);
+    setTotalOutput("");
+    setImageName("");
+    setActualImageTag("");
+  }
+
+  const processError = (error: string) => {
+    if (error.indexOf("unknown tag") >= 0) {
+      setErrorText("Unknown image tag.")
+    } else if (error.indexOf("No such image") >= 0) {
+      setErrorText("Image does not exist.");
+    } else {
+      setErrorText("An unexpected error occurred.");
+    }
   }
 
   async function triggerCopa() {
     let stdout = "";
     let stderr = "";
+
+
+    let imageTag = "";
+    // Create the correct tag for the image
+    if (selectedImage !== null) {
+      let imageSplit = selectedImage.split(':');
+      if (selectedImageTag !== undefined) {
+        imageTag = selectedImageTag;
+      } else if (imageSplit?.length === 1) {
+        imageTag = `latest-patched`;
+      } else {
+        imageTag = `${imageSplit[1]}-patched`;
+      }
+    }
+    setActualImageTag(imageTag);
+
     if (selectedImage != null) {
       let commandParts: string[] = [
         "--mount",
@@ -60,9 +103,9 @@ export function App() {
         // "--name=copa-extension",
         "copa-extension",
         `${selectedImage}`,
-        `${selectedImageTag === undefined ? `${selectedImage.split(':')[1]}-patched` : selectedImageTag}`,
+        `${imageTag}`,
         `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
-        "buildx",
+        `${useContainerdChecked ? 'custom-socket' : 'buildx'}`,
         "openvex"
       ];
       ({ stdout, stderr } = await runCopa(commandParts, stdout, stderr));
@@ -70,33 +113,35 @@ export function App() {
   }
 
   async function runCopa(commandParts: string[], stdout: string, stderr: string) {
-    let latestStdout: string = "";
+    let latestStderr: string = "";
+    let tOutput = "";
     await ddClient.docker.cli.exec(
       "run", commandParts,
       {
         stream: {
           onOutput(data: any) {
-            stdout += (data.stdout + "\n");
+
+            if (data.stdout) {
+              stdout += data.stdout;
+              tOutput += data.stdout;
+
+            }
             if (data.stderr) {
               stderr += data.stderr;
-              latestStdout = data.stderr;
+              tOutput += data.stderr;
+              latestStderr = data.stderr;
             }
-          },
-          onError(error: any) {
-            setTotalStdout(stdout);
-            console.error(error);
+            setTotalOutput(tOutput);
           },
           onClose(exitCode: number) {
             setShowLoading(false);
-            setTotalStdout(stdout);
-            var res = { stdout: stdout, stderr: stderr };
             if (exitCode == 0) {
-              processResult(res);
               setShowSuccess(true);
-              ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${selectedImage}-patched`);
+              ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${selectedImage}-${actualImageTag}`);
             } else {
               setShowFailure(true);
-              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch ${selectedImage}: ${latestStdout}`);
+              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch image ${imageName}`);
+              processError(latestStderr);
             }
           },
         },
@@ -105,9 +150,11 @@ export function App() {
     return { stdout, stderr };
   }
 
-  const processResult = (res: object) => {
-
-  }
+  const showCommandLineButton = (
+    <IconButton aria-label="show-command-line" onClick={() => { setShowCommandLine(!showCommandLine) }}>
+      {showCommandLine ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+    </IconButton>
+  )
 
   const loadingPage = (
     <Stack direction="row" alignContent="center" alignItems="center">
@@ -115,9 +162,15 @@ export function App() {
         width={80}
       >
       </Box>
-      <Stack>
+      <Stack sx={{ alignItems: 'center' }}>
         <CircularProgress size={100} />
-        <Typography align='center' variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
+        <Stack direction="row">
+          {showCommandLineButton}
+          <Typography variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
+        </Stack>
+        <Collapse in={showCommandLine}>
+          <CommandLine totalOutput={totalOutput}></CommandLine>
+        </Collapse>
       </Stack>
     </Stack>
   )
@@ -129,18 +182,24 @@ export function App() {
         alt="celebration icon"
         src="celebration-icon.png"
       />
-      <Box>
+      <Stack sx={{ alignItems: 'center' }}>
         <Typography align='center' variant="h6">Successfully patched image</Typography>
-        <Typography align='center' variant="h6">{selectedImage}!</Typography>
-      </Box>
-      <Stack direction="row" spacing={2}>
-        <Button onClick={() => {
+        <Stack direction="row">
+          {showCommandLineButton}
+          <Typography align='center' variant="h6">{imageName}!</Typography>
+        </Stack>
+      </Stack>
+      <Button
+        onClick={() => {
           clearInput();
           setShowSuccess(false);
           setShowPreload(true);
-        }}>Return</Button>
-        <Button onClick={() => { setShowCopaOutputModal(true) }}>Show Copa Output</Button>
-      </Stack>
+        }}>
+        Return
+      </Button>
+      <Collapse in={showCommandLine}>
+        <CommandLine totalOutput={totalOutput}></CommandLine>
+      </Collapse>
     </Stack>
   );
 
@@ -151,18 +210,21 @@ export function App() {
         alt="error icon"
         src="error-icon.png"
       />
-      <Box>
-        <Typography align='center' variant="h6">Failed to patch {selectedImage}:</Typography>
-        <Typography align='center' variant="h6">error here</Typography>
-      </Box>
-      <Stack direction="row" spacing={2}>
-        <Button onClick={() => {
-          clearInput();
-          setShowFailure(false);
-          setShowPreload(true);
-        }}>Return</Button>
-        <Button onClick={() => { setShowCopaOutputModal(true) }}>Show Copa Output</Button>
+      <Stack sx={{ alignItems: 'center' }} >
+        <Typography align='center' variant="h6">Failed to patch {imageName}</Typography>
+        <Stack direction="row">
+          {showCommandLineButton}
+          <Typography align='center' variant="h6">{errorText}</Typography>
+        </Stack>
       </Stack>
+      <Button onClick={() => {
+        clearInput();
+        setShowFailure(false);
+        setShowPreload(true);
+      }}>Return</Button>
+      <Collapse in={showCommandLine}>
+        <CommandLine totalOutput={totalOutput}></CommandLine>
+      </Collapse>
     </Stack>
   )
 
@@ -184,7 +246,9 @@ export function App() {
             <Typography align='center' variant="h6">Directly patch containers quickly</Typography>
             <Typography align='center' variant="h6">without going upstream for a full rebuild.</Typography>
           </Stack>
-          <Link href="https://project-copacetic.github.io/copacetic/website/">LEARN MORE</Link>
+          <Link onClick={() => {
+            ddClient.host.openExternal(learnMoreLink)
+          }}>LEARN MORE</Link>
         </Stack>
         <Divider orientation="vertical" variant="middle" flexItem />
         {showPreload &&
@@ -200,32 +264,14 @@ export function App() {
             inSettings={inSettings}
             setInSettings={setInSettings}
             patchImage={patchImage}
+            useContainerdChecked={useContainerdChecked}
+            setUseContainerdChecked={setUseContainerdChecked}
+            imageName={imageName}
+            setImageName={setImageName}
           />}
         {showLoading && loadingPage}
         {showSuccess && successPage}
         {showFailure && failurePage}
-        <Dialog
-          open={showCopaOutputModal}
-          onClose={() => { setShowCopaOutputModal(false) }}
-          scroll='paper'
-          aria-labelledby="scroll-dialog-title"
-          aria-describedby="scroll-dialog-description"
-          maxWidth='xl'
-          fullWidth
-        >
-          <DialogTitle id="scroll-dialog-title">Copa Output</DialogTitle>
-          <DialogContent dividers={true}>
-            <DialogContentText
-              id="scroll-dialog-description"
-              tabIndex={-1}
-            >
-              {totalStdout}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => { setShowCopaOutputModal(false) }}>Back</Button>
-          </DialogActions>
-        </Dialog>
       </Stack>
     </Box>
   );
