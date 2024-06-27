@@ -1,6 +1,6 @@
 # How to contribute to the Copa Docker Desktop Extension
 
-Before proceeding, ensure that Docker Desktop is installed on your computer and using the WSL backend.
+Before proceeding, ensure that Docker Desktop is installed on your computer and using the WSL backend if using Windows.
 
 ## Building the copa-extenion image
 In order to run the extension locally, you need to build the image specified in the `/container` folder so that the frontend can call `docker run` on the image.
