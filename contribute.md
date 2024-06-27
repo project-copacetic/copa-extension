@@ -10,7 +10,7 @@ Change your current directory to `/container` and run the following command:
 ```
 docker build --platform=linux/amd64 --build-arg copa_version=0.6.2 -t copa-extension .
 ```
-After the command finishes, confirm that an image named `copa-extension` is listed when you run the command `docker images` 
+After the command finishes, confirm that an image named `copa-extension` is listed when you run the command `docker images`.
 
 ## Building the frontend image
 
