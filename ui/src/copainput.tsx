@@ -99,6 +99,8 @@ export function CopaInput(props: any) {
 
   return (
     <Stack spacing={2}>
+      <Stack>
+        <Stack direction="row" alignItems="center" spacing={2}>
       <Autocomplete
         freeSolo
         disablePortal
@@ -123,9 +125,25 @@ export function CopaInput(props: any) {
             {...params}
             label={selectImageLabel}
             error={selectedImageError}
-            helperText={selectedImageHelperText}
+                helperText={!props.useContainerdChecked &&
+                  <Stack direction="row" alignItems="center">
+                    <Tooltip title={"Turn on if using containerd image store, which allows patching of "
+                      + "local images (i.e. built or tagged locally but not pushed to a registry)."}>
+                      <IconButton
+                        onClick={() => {
+                          ddClient.host.openExternal("https://docs.docker.com/desktop/containerd/")
+                        }}
+                        size='small'
+                      >
+                        <InfoIcon fontSize='inherit' />
+                      </IconButton>
+                    </Tooltip>
+                    <Typography variant='caption'>Containerd image store not enabled</Typography>
+                  </Stack>}
           />}
       />
+        </Stack>
+      </Stack>
       <FormControl fullWidth>
         <InputLabel id="demo-simple-select-label" variant='outlined'>Scanner</InputLabel>
         <Select
