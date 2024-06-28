@@ -177,22 +177,6 @@ export function CopaInput(props: any) {
                 props.setSelectedTimeout(event.target.value);
               }}
             />
-            <Stack direction="row">
-              <FormControlLabel control={
-                <Switch
-                  checked={props.useContainerdChecked}
-                  onChange={handleLocalImageSwitchChecked}
-                />
-              } label="Using containerd image store" />
-              <Tooltip title={"Turn on if using containerd image store, which allows patching of "
-                + "local images (i.e. built or tagged locally but not pushed to a registry)."}>
-                <IconButton onClick={() => {
-                  ddClient.host.openExternal("https://docs.docker.com/desktop/containerd/")
-                }}>
-                  <InfoIcon />
-                </IconButton>
-              </Tooltip>
-            </Stack>
           </Stack>
         </Grow>
       </Collapse>
