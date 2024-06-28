@@ -27,8 +27,5 @@ RUN curl --retry 5 -fsSL -o copa.tar.gz https://github.com/project-copacetic/cop
     tar -zxvf copa.tar.gz && \
     cp copa /usr/local/bin/
 
-# Install Trivy
-RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.52.0
-
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
 ENTRYPOINT ["/entrypoint.sh"]

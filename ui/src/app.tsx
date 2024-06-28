@@ -40,6 +40,7 @@ export function App() {
   const [actualImageTag, setActualImageTag] = useState("");
   const [errorText, setErrorText] = useState("");
   const [useContainerdChecked, setUseContainerdChecked] = React.useState(false);
+  const [jsonFileName, setJsonFileName] = useState("default");
 
 
   const [inSettings, setInSettings] = useState(false);
@@ -49,12 +50,18 @@ export function App() {
   const [showFailure, setShowFailure] = useState(false);
   const [showCopaOutputModal, setShowCopaOutputModal] = useState(false);
   const [showCommandLine, setShowCommandLine] = useState(false);
+  const [finishedScan, setFinishedScan] = useState(false);
   
+  useEffect(() => {
+    if (finishedScan) {
+      triggerCopa();
+    }
+  }, [finishedScan]);
 
   const patchImage = () => {
     setShowPreload(false);
     setShowLoading(true);
-    triggerCopa();
+    triggerTrivy();
   }
 
   const clearInput = () => {
@@ -75,6 +82,27 @@ export function App() {
     } else {
       setErrorText("An unexpected error occurred.");
     }
+  }
+
+  async function triggerTrivy() {
+    let stdout = ""
+    let stderr = ""
+
+    let commandParts: string[] = [
+      "-v",
+      "myVolume:/output",
+      "aquasec/trivy",
+      "image",
+      "--vuln-type",
+      "os",
+      "--ignore-unfixed",
+      "--format",
+      "json",
+      "-o",
+      `output/${jsonFileName}`,
+      `${selectedImage}`
+    ];
+    ({ stdout, stderr } = await runTrivy(commandParts, stdout, stderr));
   }
 
   async function triggerCopa() {
@@ -101,8 +129,11 @@ export function App() {
         "--mount",
         "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
         // "--name=copa-extension",
+        "-v",
+        "myVolume:/output",
         "copa-extension",
         `${selectedImage}`,
+        `${jsonFileName}`,
         `${imageTag}`,
         `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
         `${useContainerdChecked ? 'custom-socket' : 'buildx'}`,
@@ -112,9 +143,44 @@ export function App() {
     }
   }
 
+  async function runTrivy(commandParts: string[], stdout: string, stderr: string) {
+    let tOutput = totalOutput;
+    await ddClient.docker.cli.exec(
+      "run", commandParts,
+      {
+        stream: {
+          onOutput(data: any) {
+            if (data.stdout) {
+              stdout += data.stdout;
+              tOutput += data.stdout;
+
+            }
+            if (data.stderr) {
+              stderr += data.stderr;
+              tOutput += data.stderr;
+            }
+            setTotalOutput(tOutput);
+          },
+          onClose(exitCode: number) {
+            if (exitCode == 0) {
+              ddClient.desktopUI.toast.success(`Trivy scan finshed`);
+              setFinishedScan(true);
+            } else {
+              ddClient.desktopUI.toast.error(`Trivy scan failed`);
+            }
+          },
+        },
+      }
+    );
+    return { stdout, stderr };
+  }
+
+
+
+
   async function runCopa(commandParts: string[], stdout: string, stderr: string) {
     let latestStderr: string = "";
-    let tOutput = "";
+    let tOutput = totalOutput;
     await ddClient.docker.cli.exec(
       "run", commandParts,
       {
@@ -166,7 +232,7 @@ export function App() {
         <CircularProgress size={100} />
         <Stack direction="row">
           {showCommandLineButton}
-          <Typography variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
+          <Typography variant="h6" sx={{ maxWidth: 400 }}>{finishedScan ? "Patching Image..." : "Scanning Image..."}</Typography>
         </Stack>
         <Collapse in={showCommandLine}>
           <CommandLine totalOutput={totalOutput}></CommandLine>
@@ -186,7 +252,7 @@ export function App() {
         <Typography align='center' variant="h6">Successfully patched image</Typography>
         <Stack direction="row">
           {showCommandLineButton}
-          <Typography align='center' variant="h6">{imageName}!</Typography>
+          <Typography align='center' variant="h6">{selectedImage}!</Typography>
         </Stack>
       </Stack>
       <Button

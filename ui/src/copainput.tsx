@@ -97,24 +97,20 @@ export function CopaInput(props: any) {
     props.setUseContainerdChecked(event.target.checked);
   };
 
+  const handleSelectedImageChange = (event: any, newValue: string | null) => {
+    props.setSelectedImage(newValue);
+    if (newValue !== null) {
+      props.setJsonFileName(newValue.split(':').join('.') + ".json");
+    }
+  }
+
   return (
     <Stack spacing={2}>
       <Autocomplete
         freeSolo
         disablePortal
         value={props.selectedImage}
-        onInputChange={(event: any, newValue: string | null) => {
-          props.setSelectedImage(newValue);
-          if (newValue !== null) { 
-            const seperateSplit = newValue?.split(':');
-            const numColons = seperateSplit.length - 1;
-            if (numColons === 0) { 
-              props.setImageName(newValue + ":latest");
-            } else {
-              props.setImageName(newValue);
-            }
-          }
-        }}
+        onInputChange={handleSelectedImageChange}
         id="image-select-combo-box"
         options={dockerImages}
         sx={{ width: 300 }}
