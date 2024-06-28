@@ -58,12 +58,6 @@ export function App() {
     checkForContainerd();
   }, []);
 
-  useEffect(() => {
-    if (finishedScan) {
-      triggerCopa();
-    }
-  }, [finishedScan]);
-
   const patchImage = () => {
     setShowPreload(false);
     setShowLoading(true);
