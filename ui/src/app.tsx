@@ -334,6 +334,8 @@ export function App() {
             setUseContainerdChecked={setUseContainerdChecked}
             imageName={imageName}
             setImageName={setImageName}
+            jsonFileName={jsonFileName}
+            setJsonFileName={setJsonFileName}
           />}
         {showLoading && loadingPage}
         {showSuccess && successPage}
