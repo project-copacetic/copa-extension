@@ -127,7 +127,7 @@ export function CopaInput(props: any) {
             error={selectedImageError}
                 helperText={!props.useContainerdChecked &&
                   <Stack direction="row" alignItems="center">
-                    <Tooltip title={"Turn on if using containerd image store, which allows patching of "
+                    <Tooltip title={"Enable containerd image store to patch "
                       + "local images (i.e. built or tagged locally but not pushed to a registry)."}>
                       <IconButton
                         onClick={() => {
