@@ -99,33 +99,48 @@ export function CopaInput(props: any) {
 
   return (
     <Stack spacing={2}>
-      <Autocomplete
-        freeSolo
-        disablePortal
-        value={props.selectedImage}
-        onInputChange={(event: any, newValue: string | null) => {
-          props.setSelectedImage(newValue);
-          if (newValue !== null) { 
-            const seperateSplit = newValue?.split(':');
-            const numColons = seperateSplit.length - 1;
-            if (numColons === 0) { 
-              props.setImageName(newValue + ":latest");
-            } else {
-              props.setImageName(newValue);
-            }
-          }
-        }}
-        id="image-select-combo-box"
-        options={dockerImages}
-        sx={{ width: 300 }}
-        renderInput={(params) =>
-          <TextField
-            {...params}
-            label={selectImageLabel}
-            error={selectedImageError}
-            helperText={selectedImageHelperText}
-          />}
-      />
+      <Stack>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Autocomplete
+            freeSolo
+            disablePortal
+            value={props.selectedImage}
+            onInputChange={(event: any, newValue: string | null) => {
+              props.setSelectedImage(newValue);
+              if (newValue !== null) {
+                const seperateSplit = newValue?.split(':');
+                const numColons = seperateSplit.length - 1;
+                if (numColons === 0) {
+                  props.setImageName(newValue + ":latest");
+                } else {
+                  props.setImageName(newValue);
+                }
+              }
+            }}
+            id="image-select-combo-box"
+            options={dockerImages}
+            sx={{ width: 300 }}
+            renderInput={(params) =>
+              <TextField
+                {...params}
+                label={selectImageLabel}
+                error={selectedImageError}
+                helperText={!props.useContainerdChecked &&
+                  <Stack direction="row" alignItems="center" spacing={1.05}>
+                    <Tooltip title={"Enable containerd image store to patch "
+                      + "local images (i.e. built or tagged locally but not pushed to a registry)."}>
+                      <InfoIcon fontSize='small' />
+                    </Tooltip>
+                    <Link href="#" onClick={() => {
+                      ddClient.host.openExternal("https://docs.docker.com/desktop/containerd/")
+                    }}>
+                      <Typography variant='caption'>Containerd image store not enabled</Typography>
+                    </Link>
+                  </Stack>}
+              />}
+          />
+        </Stack>
+      </Stack>
       <FormControl fullWidth>
         <InputLabel id="demo-simple-select-label" variant='outlined'>Scanner</InputLabel>
         <Select
@@ -159,22 +174,6 @@ export function CopaInput(props: any) {
                 props.setSelectedTimeout(event.target.value);
               }}
             />
-            <Stack direction="row">
-              <FormControlLabel control={
-                <Switch
-                  checked={props.useContainerdChecked}
-                  onChange={handleLocalImageSwitchChecked}
-                />
-              } label="Using containerd image store" />
-              <Tooltip title={"Turn on if using containerd image store, which allows patching of "
-                + "local images (i.e. built or tagged locally but not pushed to a registry)."}>
-                <IconButton onClick={() => {
-                  ddClient.host.openExternal("https://docs.docker.com/desktop/containerd/")
-                }}>
-                  <InfoIcon />
-                </IconButton>
-              </Tooltip>
-            </Stack>
           </Stack>
         </Grow>
       </Collapse>
