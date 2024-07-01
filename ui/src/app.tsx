@@ -51,12 +51,37 @@ export function App() {
   const [showCopaOutputModal, setShowCopaOutputModal] = useState(false);
   const [showCommandLine, setShowCommandLine] = useState(false);
   const [finishedScan, setFinishedScan] = useState(false);
-  
+
   useEffect(() => {
+    const getTrivyOutput = async () => {
+      const output = await ddClient.docker.cli.exec("run", [
+        "-v",
+        "myVolume:/data",
+        "-e",
+        "file=data/nginx.1.21.6.json",
+        "cat-tool"
+      ]);
+      const data = JSON.parse(output.stdout);
+      const severityMap: Record<string, number> = {
+        "UNKNOWN": 0,
+        "LOW": 0,
+        "MEDIUM": 0,
+        "HIGH": 0,
+        "CRITICAL": 0
+      };
+      for (const result of data.Results) {
+        for (const vulnerability of result.Vulnerabilities) {
+          severityMap[vulnerability.Severity]++;
+        }
+      }
+    };
     if (finishedScan) {
+      getTrivyOutput();
       triggerCopa();
     }
   }, [finishedScan]);
+
+
 
   const patchImage = () => {
     setShowPreload(false);
