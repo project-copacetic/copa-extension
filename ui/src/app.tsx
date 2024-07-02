@@ -47,7 +47,7 @@ export function App() {
   const [totalOutput, setTotalOutput] = useState("");
   const [actualImageTag, setActualImageTag] = useState("");
   const [errorText, setErrorText] = useState("");
-  const [useContainerdChecked, setUseContainerdChecked] = React.useState(false);
+  const [useContainerdChecked, setUseContainerdChecked] = useState(false);
   const [jsonFileName, setJsonFileName] = useState("default");
 
 
@@ -106,6 +106,13 @@ export function App() {
   }, [finishedScan]);
 
 
+  useEffect(() => {
+    const checkForContainerd = async () => {
+      let containerdEnabled = await isContainerdEnabled();
+      setUseContainerdChecked(containerdEnabled);
+    }
+    checkForContainerd();
+  }, []);
 
   const patchImage = () => {
     setShowPreload(false);
@@ -235,6 +242,16 @@ export function App() {
   }
 
 
+
+
+  async function isContainerdEnabled() {
+    const result = await ddClient.docker.cli.exec("info", [
+      "--format",
+      '"{{ json . }}"',
+    ]);
+    const info = JSON.parse(result.stdout);
+    return info.Driver === "overlayfs";
+  }
 
 
   async function runCopa(commandParts: string[], stdout: string, stderr: string) {
