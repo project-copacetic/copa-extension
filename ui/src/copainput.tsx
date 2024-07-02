@@ -18,13 +18,22 @@ import {
   CircularProgress,
   FormControlLabel,
   Switch,
-  Tooltip
+  Tooltip,
+  LinearProgress,
+  Skeleton
 } from '@mui/material';
+import { ClickAwayListener } from '@mui/base';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import InfoIcon from '@mui/icons-material/Info';
+import { VulnerabilityDisplay } from './vulnerabilitydisplay';
+
+const VULN_UNLOADED = 0;
+const VULN_LOADING = 1;
+const VULN_LOADED = 2;
+
 export function CopaInput(props: any) {
 
   const ddClient = createDockerDesktopClient();
@@ -105,7 +114,7 @@ export function CopaInput(props: any) {
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1.5}>
       <Autocomplete
         freeSolo
         disablePortal
@@ -113,6 +122,12 @@ export function CopaInput(props: any) {
         onInputChange={handleSelectedImageChange}
         id="image-select-combo-box"
         options={dockerImages}
+        onClose={() => {
+          if (props.lastTrivyScanImage !== props.selectedImage) {
+            props.setVulnState(VULN_LOADING);
+            props.triggerTrivy();
+          }
+        }}
         sx={{ width: 300 }}
         renderInput={(params) =>
           <TextField
@@ -174,6 +189,13 @@ export function CopaInput(props: any) {
           </Stack>
         </Grow>
       </Collapse>
+      <Divider />
+      <Typography ><Box sx={{ fontWeight: 'bold', m: 1 }}>Vulnerabilities</Box></Typography>
+      <VulnerabilityDisplay
+        vulnerabilityCount={props.vulnerabilityCount}
+        vulnState={props.vulnState}
+        setVulnState={props.setVulnState}
+      />
       <Stack direction="row" spacing={2}>
         <Button onClick={validateInput}>Patch image</Button>
         <Button onClick={() => {

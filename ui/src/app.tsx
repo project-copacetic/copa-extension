@@ -16,18 +16,26 @@ import {
   DialogActions,
   IconButton,
   Grow,
-  Collapse
+  Collapse,
+  Paper
 } from '@mui/material';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { CopaInput } from './copainput';
 import { CommandLine } from './commandline';
+import { VulnerabilityDisplay } from './vulnerabilitydisplay';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
+const VULN_UNLOADED = 0;
+const VULN_LOADING = 1;
+const VULN_LOADED = 2;
+
+
 export function App() {
-  const ddClient = createDockerDesktopClient();
+
   const learnMoreLink = "https://project-copacetic.github.io/copacetic/website/";
 
+  const ddClient = createDockerDesktopClient();
   // The correct image name of the currently selected image. The latest tag is added if there is no tag.
   const [imageName, setImageName] = useState("");
 
@@ -48,33 +56,49 @@ export function App() {
   const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showFailure, setShowFailure] = useState(false);
-  const [showCopaOutputModal, setShowCopaOutputModal] = useState(false);
   const [showCommandLine, setShowCommandLine] = useState(false);
   const [finishedScan, setFinishedScan] = useState(false);
+  const [lastTrivyScanImage, setLastTrivyScanImage] = useState("");
 
-  useEffect(() => {
-    const getTrivyOutput = async () => {
-      const output = await ddClient.docker.cli.exec("run", [
-        "-v",
-        "myVolume:/data",
-        "-e",
-        "file=data/nginx.1.21.6.json",
-        "cat-tool"
-      ]);
-      const data = JSON.parse(output.stdout);
-      const severityMap: Record<string, number> = {
-        "UNKNOWN": 0,
-        "LOW": 0,
-        "MEDIUM": 0,
-        "HIGH": 0,
-        "CRITICAL": 0
-      };
-      for (const result of data.Results) {
+  const [vulnState, setVulnState] = useState(VULN_UNLOADED);
+
+  const [vulnerabilityCount, setVulnerabilityCount] = useState<Record<string, number>>({
+    "UNKNOWN": 0,
+    "LOW": 0,
+    "MEDIUM": 0,
+    "HIGH": 0,
+    "CRITICAL": 0
+  });
+
+  const getTrivyOutput = async () => {
+    const output = await ddClient.docker.cli.exec("run", [
+      "-v",
+      "myVolume:/data",
+      "-e",
+      `file=data/${jsonFileName}`,
+      "cat-tool"
+    ]);
+    const data = JSON.parse(output.stdout);
+    const severityMap: Record<string, number> = {
+      "UNKNOWN": 0,
+      "LOW": 0,
+      "MEDIUM": 0,
+      "HIGH": 0,
+      "CRITICAL": 0
+    };
+    for (const result of data.Results) {
+      if (result.Vulnerabilities) {
         for (const vulnerability of result.Vulnerabilities) {
           severityMap[vulnerability.Severity]++;
         }
       }
-    };
+    }
+
+    setVulnerabilityCount(severityMap);
+    setVulnState(VULN_LOADED);
+  };
+
+  useEffect(() => {
     if (finishedScan) {
       getTrivyOutput();
       triggerCopa();
@@ -86,7 +110,6 @@ export function App() {
   const patchImage = () => {
     setShowPreload(false);
     setShowLoading(true);
-    triggerTrivy();
   }
 
   const clearInput = () => {
@@ -94,6 +117,13 @@ export function App() {
     setSelectedScanner(undefined);
     setSelectedImageTag(undefined);
     setSelectedTimeout(undefined);
+    setVulnerabilityCount({
+      "UNKNOWN": 0,
+      "LOW": 0,
+      "MEDIUM": 0,
+      "HIGH": 0,
+      "CRITICAL": 0
+    });
     setTotalOutput("");
     setImageName("");
     setActualImageTag("");
@@ -112,7 +142,9 @@ export function App() {
   async function triggerTrivy() {
     let stdout = ""
     let stderr = ""
-
+    if (selectedImage !== null) {
+      setLastTrivyScanImage(selectedImage);
+    }
     let commandParts: string[] = [
       "-v",
       "myVolume:/output",
@@ -188,9 +220,11 @@ export function App() {
           },
           onClose(exitCode: number) {
             if (exitCode == 0) {
-              ddClient.desktopUI.toast.success(`Trivy scan finshed`);
-              setFinishedScan(true);
+              ddClient.desktopUI.toast.success(`Trivy scan finished`);
+              getTrivyOutput();
+              // setFinishedScan(true);
             } else {
+              setVulnState(VULN_UNLOADED);
               ddClient.desktopUI.toast.error(`Trivy scan failed`);
             }
           },
@@ -253,12 +287,15 @@ export function App() {
         width={80}
       >
       </Box>
-      <Stack sx={{ alignItems: 'center' }}>
+      <Stack sx={{ alignItems: 'center' }} spacing={2}>
         <CircularProgress size={100} />
         <Stack direction="row">
           {showCommandLineButton}
           <Typography variant="h6" sx={{ maxWidth: 400 }}>{finishedScan ? "Patching Image..." : "Scanning Image..."}</Typography>
         </Stack>
+        <Typography textAlign='center' variant='h6'>Vulnerabilities</Typography>
+        <VulnerabilityDisplay vulnerabilityCount={vulnerabilityCount} />
+        <Divider />
         <Collapse in={showCommandLine}>
           <CommandLine totalOutput={totalOutput}></CommandLine>
         </Collapse>
@@ -361,6 +398,12 @@ export function App() {
             setImageName={setImageName}
             jsonFileName={jsonFileName}
             setJsonFileName={setJsonFileName}
+            vulnerabilityCount={vulnerabilityCount}
+            triggerTrivy={triggerTrivy}
+            getTrivyOutput={getTrivyOutput}
+            vulnState={vulnState}
+            setVulnState={setVulnState}
+            lastTrivyScanImage={lastTrivyScanImage}
           />}
         {showLoading && loadingPage}
         {showSuccess && successPage}
