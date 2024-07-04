@@ -99,7 +99,7 @@ export function App() {
   };
 
   useEffect(() => {
-    if (finishedScan) {
+    if (finishedScan && showLoading) {
       getTrivyOutput();
       triggerCopa();
     }
@@ -115,8 +115,14 @@ export function App() {
   }, []);
 
   const patchImage = () => {
+
     setShowPreload(false);
     setShowLoading(true);
+
+    if (finishedScan) {
+      getTrivyOutput();
+      triggerCopa();
+    }
   }
 
   const clearInput = () => {
@@ -134,6 +140,7 @@ export function App() {
     setTotalOutput("");
     setImageName("");
     setActualImageTag("");
+    setVulnState(VULN_UNLOADED);
   }
 
   const processError = (error: string) => {
@@ -146,15 +153,25 @@ export function App() {
     }
   }
 
-  async function triggerTrivy() {
+  async function triggerTrivy(overrideImageName: any) {
     let stdout = ""
     let stderr = ""
+
+    setFinishedScan(false);
+
+    // Force remove previous container
+    await ddClient.docker.cli.exec("rm", [
+      "-f",
+      "trivy-copa-extension-container",
+    ]);
     if (selectedImage !== null) {
       setLastTrivyScanImage(selectedImage);
     }
     let commandParts: string[] = [
       "-v",
       "myVolume:/output",
+      "--name",
+      "trivy-copa-extension-container",
       "aquasec/trivy",
       "image",
       "--vuln-type",
@@ -164,7 +181,7 @@ export function App() {
       "json",
       "-o",
       `output/${jsonFileName}`,
-      `${selectedImage}`
+      `${overrideImageName === null ? selectedImage : overrideImageName}`
     ];
     ({ stdout, stderr } = await runTrivy(commandParts, stdout, stderr));
   }
@@ -229,10 +246,10 @@ export function App() {
             if (exitCode == 0) {
               ddClient.desktopUI.toast.success(`Trivy scan finished`);
               getTrivyOutput();
-              // setFinishedScan(true);
-            } else {
+              setFinishedScan(true);
+            } else if (exitCode !== 137) {
               setVulnState(VULN_UNLOADED);
-              ddClient.desktopUI.toast.error(`Trivy scan failed`);
+              ddClient.desktopUI.toast.error(`Trivy scan failed: ${stderr}`);
             }
           },
         },
@@ -310,9 +327,13 @@ export function App() {
           {showCommandLineButton}
           <Typography variant="h6" sx={{ maxWidth: 400 }}>{finishedScan ? "Patching Image..." : "Scanning Image..."}</Typography>
         </Stack>
-        <Typography textAlign='center' variant='h6'>Vulnerabilities</Typography>
-        <VulnerabilityDisplay vulnerabilityCount={vulnerabilityCount} />
-        <Divider />
+        <Divider flexItem />
+        <Typography ><Box sx={{ fontWeight: 'bold', m: 1 }}>Vulnerabilities</Box></Typography>
+        <VulnerabilityDisplay
+          vulnerabilityCount={vulnerabilityCount}
+          vulnState={vulnState}
+          setVulnState={setVulnState}
+        />
         <Collapse in={showCommandLine}>
           <CommandLine totalOutput={totalOutput}></CommandLine>
         </Collapse>

@@ -122,10 +122,16 @@ export function CopaInput(props: any) {
         onInputChange={handleSelectedImageChange}
         id="image-select-combo-box"
         options={dockerImages}
-        onClose={() => {
-          if (props.lastTrivyScanImage !== props.selectedImage) {
+        onChange={(event: React.SyntheticEvent, value: any, reason: string) => {
+          if (props.lastTrivyScanImage !== value) {
             props.setVulnState(VULN_LOADING);
-            props.triggerTrivy();
+            props.triggerTrivy(value);
+          }
+        }}
+        onClose={(event: React.SyntheticEvent, reason: string) => {
+          if (reason !== "selectOption" && props.lastTrivyScanImage !== props.selectedImage) {
+            props.setVulnState(VULN_LOADING);
+            props.triggerTrivy(null);
           }
         }}
         sx={{ width: 300 }}
