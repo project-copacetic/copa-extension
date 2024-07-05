@@ -70,12 +70,12 @@ export function App() {
     "CRITICAL": 0
   });
 
-  const getTrivyOutput = async () => {
+  const getTrivyOutput = async (curImageName: any, curJsonFileName: any) => {
     const output = await ddClient.docker.cli.exec("run", [
       "-v",
       "myVolume:/data",
       "-e",
-      `file=data/${jsonFileName}`,
+      `file=data/${curJsonFileName}`,
       "cat-tool"
     ]);
     const data = JSON.parse(output.stdout);
@@ -102,7 +102,7 @@ export function App() {
 
   useEffect(() => {
     if (finishedScan && showLoading) {
-      getTrivyOutput();
+      getTrivyOutput(selectedImage, jsonFileName);
       triggerCopa();
     }
   }, [finishedScan]);
@@ -120,9 +120,7 @@ export function App() {
 
     setShowPreload(false);
     setShowLoading(true);
-
     if (finishedScan) {
-      getTrivyOutput();
       triggerCopa();
     }
   }
@@ -155,7 +153,7 @@ export function App() {
     }
   }
 
-  async function triggerTrivy(overrideImageName: any) {
+  async function triggerTrivy(curImageName: any, curJsonFileName: any) {
     let stdout = ""
     let stderr = ""
 
@@ -170,6 +168,8 @@ export function App() {
       setLastTrivyScanImage(selectedImage);
     }
     let commandParts: string[] = [
+      "--mount",
+      "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
       "-v",
       "myVolume:/output",
       "--name",
@@ -182,10 +182,10 @@ export function App() {
       "--format",
       "json",
       "-o",
-      `output/${jsonFileName}`,
-      `${overrideImageName === null ? selectedImage : overrideImageName}`
+      `output/${curJsonFileName}`,
+      `${curImageName}`
     ];
-    ({ stdout, stderr } = await runTrivy(commandParts, stdout, stderr));
+    ({ stdout, stderr } = await runTrivy(commandParts, stdout, stderr, curImageName, curJsonFileName));
   }
 
   async function triggerCopa() {
@@ -226,7 +226,7 @@ export function App() {
     }
   }
 
-  async function runTrivy(commandParts: string[], stdout: string, stderr: string) {
+  async function runTrivy(commandParts: string[], stdout: string, stderr: string, curImageName: any, curJsonFileName: any) {
     let tOutput = totalOutput;
     await ddClient.docker.cli.exec(
       "run", commandParts,
@@ -247,7 +247,7 @@ export function App() {
           onClose(exitCode: number) {
             if (exitCode == 0) {
               ddClient.desktopUI.toast.success(`Trivy scan finished`);
-              getTrivyOutput();
+              getTrivyOutput(curImageName, curJsonFileName)
               setFinishedScan(true);
             } else if (exitCode !== 137) {
               setVulnState(VULN_UNLOADED);
@@ -417,7 +417,6 @@ export function App() {
           <Link onClick={() => {
             ddClient.host.openExternal(learnMoreLink)
           }}>LEARN MORE</Link>
-          <CommandLine totalOutput={totalOutput}></CommandLine>
         </Stack>
         <Divider orientation="vertical" variant="middle" flexItem />
         {showPreload &&

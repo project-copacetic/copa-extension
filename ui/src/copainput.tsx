@@ -109,7 +109,9 @@ export function CopaInput(props: any) {
   const handleSelectedImageChange = (event: any, newValue: string | null) => {
     props.setSelectedImage(newValue);
     if (newValue !== null) {
-      props.setJsonFileName(newValue.split(':').join('.') + ".json");
+      let str1 = newValue.split(':').join('.');
+      let str2 = str1.split("/").join('.');
+      props.setJsonFileName(str2 + ".json");
     }
   }
 
@@ -123,15 +125,15 @@ export function CopaInput(props: any) {
         id="image-select-combo-box"
         options={dockerImages}
         onChange={(event: React.SyntheticEvent, value: any, reason: string) => {
-          if (props.lastTrivyScanImage !== value) {
-            props.setVulnState(VULN_LOADING);
-            props.triggerTrivy(value);
-          }
+          props.setVulnState(VULN_LOADING);
+          let str1 = value.split(':').join('.');
+          let str2 = str1.split("/").join('.');
+          props.triggerTrivy(value, str2 + ".json");
         }}
         onClose={(event: React.SyntheticEvent, reason: string) => {
-          if (reason !== "selectOption" && props.lastTrivyScanImage !== props.selectedImage) {
+          if (reason !== "selectOption") {
             props.setVulnState(VULN_LOADING);
-            props.triggerTrivy(null);
+            props.triggerTrivy(props.selectedImage, props.jsonFileName);
           }
         }}
         sx={{ width: 300 }}
