@@ -86,10 +86,12 @@ export function App() {
       "HIGH": 0,
       "CRITICAL": 0
     };
-    for (const result of data.Results) {
-      if (result.Vulnerabilities) {
-        for (const vulnerability of result.Vulnerabilities) {
-          severityMap[vulnerability.Severity]++;
+    if (data.Results) {
+      for (const result of data.Results) {
+        if (result.Vulnerabilities) {
+          for (const vulnerability of result.Vulnerabilities) {
+            severityMap[vulnerability.Severity]++;
+          }
         }
       }
     }
@@ -415,6 +417,7 @@ export function App() {
           <Link onClick={() => {
             ddClient.host.openExternal(learnMoreLink)
           }}>LEARN MORE</Link>
+          <CommandLine totalOutput={totalOutput}></CommandLine>
         </Stack>
         <Divider orientation="vertical" variant="middle" flexItem />
         {showPreload &&
