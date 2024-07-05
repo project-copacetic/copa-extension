@@ -59,6 +59,7 @@ export function App() {
   const [showCommandLine, setShowCommandLine] = useState(false);
   const [finishedScan, setFinishedScan] = useState(false);
   const [lastTrivyScanImage, setLastTrivyScanImage] = useState("");
+  const [tryUpdateResultsFlag, setTryUpdateResultsFlag] = useState(false);
 
   const [vulnState, setVulnState] = useState(VULN_UNLOADED);
 
@@ -95,19 +96,13 @@ export function App() {
         }
       }
     }
-
     setVulnerabilityCount(severityMap);
-    setVulnState(VULN_LOADED);
+    setTryUpdateResultsFlag(a => !a);
   };
 
-  useEffect(() => {
-    if (finishedScan && showLoading) {
-      getTrivyOutput(selectedImage, jsonFileName);
-      triggerCopa();
-    }
-  }, [finishedScan]);
+  // -- Effects --
 
-
+  // On app launch, check for containerd
   useEffect(() => {
     const checkForContainerd = async () => {
       let containerdEnabled = await isContainerdEnabled();
@@ -115,6 +110,23 @@ export function App() {
     }
     checkForContainerd();
   }, []);
+
+  // If the scan is finished and we have already selected "Patch Image", start the patching
+  useEffect(() => {
+    if (finishedScan && showLoading) {
+      getTrivyOutput(selectedImage, jsonFileName);
+      triggerCopa();
+    }
+  }, [finishedScan]);
+
+  // After scan results are pulled, check if we can display them (if another scan hasn't started)
+  useEffect(() => {
+    if (finishedScan) {
+      setVulnState(VULN_LOADED);
+    }
+  }, [tryUpdateResultsFlag]);
+
+  // -----------
 
   const patchImage = () => {
 
@@ -247,8 +259,8 @@ export function App() {
           onClose(exitCode: number) {
             if (exitCode == 0) {
               ddClient.desktopUI.toast.success(`Trivy scan finished`);
-              getTrivyOutput(curImageName, curJsonFileName)
               setFinishedScan(true);
+              getTrivyOutput(curImageName, curJsonFileName)
             } else if (exitCode !== 137) {
               setVulnState(VULN_UNLOADED);
               ddClient.desktopUI.toast.error(`Trivy scan failed: ${stderr}`);
