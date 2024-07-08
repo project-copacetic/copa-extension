@@ -42,6 +42,17 @@ export function CopaInput(props: any) {
   const [selectedImageHelperText, setSelectedImageHelperText] = useState("");
   const [selectImageLabel, setSelectImageLabel] = useState("Remote Images");
 
+  useEffect(() => {
+    props.setSelectedImage("");
+    if (props.useContainerdChecked) {
+      fetchData();
+      setSelectImageLabel("Local Image / Remote Image");
+    } else {
+      setDockerImages([]);
+      setSelectImageLabel("Remote Image")
+    }
+  }, [props.useContainerdChecked]);
+
   const fetchData = async () => {
     const imagesList = await ddClient.docker.listImages();
     const listImages = (imagesList as []).map((images: any) => images.RepoTags)
@@ -55,16 +66,9 @@ export function CopaInput(props: any) {
     setDockerImages(listImages);
   }
 
-  useEffect(() => {
-    props.setSelectedImage("");
-    if (props.useContainerdChecked) {
-      fetchData();
-      setSelectImageLabel("Local Image / Remote Image");
-    } else {
-      setDockerImages([]);
-      setSelectImageLabel("Remote Image")
-    }
-  }, [props.useContainerdChecked]);
+  const sumValues = (obj: Record<string, number>): number => {
+    return Object.values(obj).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+  };
 
   const hasWhiteSpace = (s: string) => {
     return s.indexOf(' ') >= 0;
@@ -124,19 +128,11 @@ export function CopaInput(props: any) {
         onInputChange={handleSelectedImageChange}
         id="image-select-combo-box"
         options={dockerImages}
-        onChange={(event: React.SyntheticEvent, value: any, reason: string) => {
-          props.setVulnState(VULN_LOADING);
-          let str1 = value.split(':').join('.');
-          let str2 = str1.split("/").join('.');
-          props.triggerTrivy(value, str2 + ".json");
-        }}
-        onClose={(event: React.SyntheticEvent, reason: string) => {
-          if (reason !== "selectOption") {
-            props.setVulnState(VULN_LOADING);
-            props.triggerTrivy(props.selectedImage, props.jsonFileName);
-          }
+        onOpen={(event: React.SyntheticEvent) => {
+          props.setVulnState(VULN_UNLOADED);
         }}
         sx={{ width: 300 }}
+        disabled={props.vulnState === VULN_LOADING}
         renderInput={(params) =>
           <TextField
             {...params}
@@ -200,7 +196,14 @@ export function CopaInput(props: any) {
         setVulnState={props.setVulnState}
       />
       <Stack direction="row" spacing={2}>
-        <Button onClick={validateInput}>Patch image</Button>
+
+        <Button disabled={props.vulnState === VULN_LOADING || (props.vulnState === VULN_LOADED && sumValues(props.vulnerabilityCount) === 0)} onClick={() => {
+          if (props.vulnState === VULN_UNLOADED) {
+            props.triggerTrivy();
+          } else if (props.vulnState === VULN_LOADED) {
+            validateInput();
+          }
+        }}>{props.vulnState === VULN_LOADED ? "Patch Image" : "Scan Image"}</Button>
         <Button onClick={() => {
           props.setInSettings(!props.inSettings);
         }} >Settings</Button>

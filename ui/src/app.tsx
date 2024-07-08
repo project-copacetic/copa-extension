@@ -57,9 +57,6 @@ export function App() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showFailure, setShowFailure] = useState(false);
   const [showCommandLine, setShowCommandLine] = useState(false);
-  const [finishedScan, setFinishedScan] = useState(false);
-  const [lastTrivyScanImage, setLastTrivyScanImage] = useState("");
-  const [tryUpdateResultsFlag, setTryUpdateResultsFlag] = useState(false);
 
   const [vulnState, setVulnState] = useState(VULN_UNLOADED);
 
@@ -71,12 +68,12 @@ export function App() {
     "CRITICAL": 0
   });
 
-  const getTrivyOutput = async (curImageName: any, curJsonFileName: any) => {
+  const getTrivyOutput = async () => {
     const output = await ddClient.docker.cli.exec("run", [
       "-v",
       "myVolume:/data",
       "-e",
-      `file=data/${curJsonFileName}`,
+      `file=data/${jsonFileName}`,
       "cat-tool"
     ]);
     const data = JSON.parse(output.stdout);
@@ -97,7 +94,7 @@ export function App() {
       }
     }
     setVulnerabilityCount(severityMap);
-    setTryUpdateResultsFlag(a => !a);
+    setVulnState(VULN_LOADED);
   };
 
   // -- Effects --
@@ -111,30 +108,13 @@ export function App() {
     checkForContainerd();
   }, []);
 
-  // If the scan is finished and we have already selected "Patch Image", start the patching
-  useEffect(() => {
-    if (finishedScan && showLoading) {
-      getTrivyOutput(selectedImage, jsonFileName);
-      triggerCopa();
-    }
-  }, [finishedScan]);
-
-  // After scan results are pulled, check if we can display them (if another scan hasn't started)
-  useEffect(() => {
-    if (finishedScan) {
-      setVulnState(VULN_LOADED);
-    }
-  }, [tryUpdateResultsFlag]);
-
   // -----------
 
   const patchImage = () => {
 
     setShowPreload(false);
     setShowLoading(true);
-    if (finishedScan) {
-      triggerCopa();
-    }
+    triggerCopa();
   }
 
   const clearInput = () => {
@@ -165,20 +145,17 @@ export function App() {
     }
   }
 
-  async function triggerTrivy(curImageName: any, curJsonFileName: any) {
+  async function triggerTrivy() {
     let stdout = ""
     let stderr = ""
 
-    setFinishedScan(false);
+    setVulnState(VULN_LOADING);
 
     // Force remove previous container
     await ddClient.docker.cli.exec("rm", [
       "-f",
       "trivy-copa-extension-container",
     ]);
-    if (selectedImage !== null) {
-      setLastTrivyScanImage(selectedImage);
-    }
     let commandParts: string[] = [
       "--mount",
       "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
@@ -194,10 +171,10 @@ export function App() {
       "--format",
       "json",
       "-o",
-      `output/${curJsonFileName}`,
-      `${curImageName}`
+      `output/${jsonFileName}`,
+      `${selectedImage}`
     ];
-    ({ stdout, stderr } = await runTrivy(commandParts, stdout, stderr, curImageName, curJsonFileName));
+    ({ stdout, stderr } = await runTrivy(commandParts, stdout, stderr));
   }
 
   async function triggerCopa() {
@@ -238,7 +215,7 @@ export function App() {
     }
   }
 
-  async function runTrivy(commandParts: string[], stdout: string, stderr: string, curImageName: any, curJsonFileName: any) {
+  async function runTrivy(commandParts: string[], stdout: string, stderr: string) {
     let tOutput = totalOutput;
     await ddClient.docker.cli.exec(
       "run", commandParts,
@@ -259,8 +236,7 @@ export function App() {
           onClose(exitCode: number) {
             if (exitCode == 0) {
               ddClient.desktopUI.toast.success(`Trivy scan finished`);
-              setFinishedScan(true);
-              getTrivyOutput(curImageName, curJsonFileName)
+              getTrivyOutput()
             } else if (exitCode !== 137) {
               setVulnState(VULN_UNLOADED);
               ddClient.desktopUI.toast.error(`Trivy scan failed: ${stderr}`);
@@ -339,7 +315,7 @@ export function App() {
         <CircularProgress size={100} />
         <Stack direction="row">
           {showCommandLineButton}
-          <Typography variant="h6" sx={{ maxWidth: 400 }}>{finishedScan ? "Patching Image..." : "Scanning Image..."}</Typography>
+          <Typography variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
         </Stack>
         <Divider flexItem />
         <Typography ><Box sx={{ fontWeight: 'bold', m: 1 }}>Vulnerabilities</Box></Typography>
@@ -455,7 +431,6 @@ export function App() {
             getTrivyOutput={getTrivyOutput}
             vulnState={vulnState}
             setVulnState={setVulnState}
-            lastTrivyScanImage={lastTrivyScanImage}
           />}
         {showLoading && loadingPage}
         {showSuccess && successPage}
