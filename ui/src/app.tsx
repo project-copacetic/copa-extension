@@ -71,7 +71,7 @@ export function App() {
   const getTrivyOutput = async () => {
     const output = await ddClient.docker.cli.exec("run", [
       "-v",
-      "myVolume:/data",
+      "copa-extension-volume:/data",
       "-e",
       `file=data/${jsonFileName}`,
       "cat-tool"
@@ -160,7 +160,7 @@ export function App() {
       "--mount",
       "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
       "-v",
-      "myVolume:/output",
+      "copa-extension-volume:/output",
       "--name",
       "trivy-copa-extension-container",
       "aquasec/trivy",
@@ -202,7 +202,7 @@ export function App() {
         "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
         // "--name=copa-extension",
         "-v",
-        "myVolume:/output",
+        "copa-extension-volume:/output",
         "copa-extension",
         `${selectedImage}`,
         `${jsonFileName}`,
