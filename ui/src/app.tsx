@@ -317,13 +317,6 @@ export function App() {
           {showCommandLineButton}
           <Typography variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
         </Stack>
-        <Divider flexItem />
-        <Typography ><Box sx={{ fontWeight: 'bold', m: 1 }}>Vulnerabilities</Box></Typography>
-        <VulnerabilityDisplay
-          vulnerabilityCount={vulnerabilityCount}
-          vulnState={vulnState}
-          setVulnState={setVulnState}
-        />
         <Collapse in={showCommandLine}>
           <CommandLine totalOutput={totalOutput}></CommandLine>
         </Collapse>
