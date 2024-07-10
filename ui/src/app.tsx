@@ -45,7 +45,6 @@ export function App() {
   const [selectedImageTag, setSelectedImageTag] = useState<string | undefined>(undefined);
   const [selectedTimeout, setSelectedTimeout] = useState<string | undefined>(undefined);
   const [totalOutput, setTotalOutput] = useState("");
-  const [actualImageTag, setActualImageTag] = useState("");
   const [errorText, setErrorText] = useState("");
   const [useContainerdChecked, setUseContainerdChecked] = useState(false);
   const [jsonFileName, setJsonFileName] = useState("default");
@@ -57,6 +56,9 @@ export function App() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showFailure, setShowFailure] = useState(false);
   const [showCommandLine, setShowCommandLine] = useState(false);
+
+  const baseImageName = selectedImage?.split(':')[0];
+
 
   const [vulnState, setVulnState] = useState(VULN_UNLOADED);
 
@@ -130,8 +132,6 @@ export function App() {
       "CRITICAL": 0
     });
     setTotalOutput("");
-    setImageName("");
-    setActualImageTag("");
     setVulnState(VULN_UNLOADED);
   }
 
@@ -177,24 +177,28 @@ export function App() {
     ({ stdout, stderr } = await runTrivy(commandParts, stdout, stderr));
   }
 
+  const getImageTag = () => {
+    if (selectedImage === null) {
+      return;
+    }
+    // Create the correct tag for the image
+    const imageSplit = selectedImage.split(':');
+    if (selectedImageTag === undefined || selectedImageTag === "") {
+      if (selectedImageTag !== undefined) {
+        return selectedImageTag;
+      } else if (imageSplit?.length === 1) {
+        return `latest-patched`;
+      } else {
+        return `${imageSplit[1]}-patched`;
+      }
+    } else {
+      return selectedImageTag;
+    }
+  }
+
   async function triggerCopa() {
     let stdout = "";
     let stderr = "";
-
-
-    let imageTag = "";
-    // Create the correct tag for the image
-    if (selectedImage !== null) {
-      let imageSplit = selectedImage.split(':');
-      if (selectedImageTag !== undefined) {
-        imageTag = selectedImageTag;
-      } else if (imageSplit?.length === 1) {
-        imageTag = `latest-patched`;
-      } else {
-        imageTag = `${imageSplit[1]}-patched`;
-      }
-    }
-    setActualImageTag(imageTag);
 
     if (selectedImage != null) {
       let commandParts: string[] = [
@@ -205,8 +209,7 @@ export function App() {
         "copa-extension-volume:/output",
         "copa-extension",
         `${selectedImage}`,
-        `${jsonFileName}`,
-        `${imageTag}`,
+        `${getImageTag()}`,
         `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
         `${useContainerdChecked ? 'custom-socket' : 'buildx'}`,
         "openvex"
@@ -286,10 +289,10 @@ export function App() {
             setShowLoading(false);
             if (exitCode == 0) {
               setShowSuccess(true);
-              ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${selectedImage}-${actualImageTag}`);
+              ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${baseImageName}:${getImageTag()}`);
             } else {
               setShowFailure(true);
-              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch image ${imageName}`);
+              ddClient.desktopUI.toast.error(`Copacetic - Failed to patch image ${selectedImage}`);
               processError(latestStderr);
             }
           },
@@ -360,7 +363,7 @@ export function App() {
         src="error-icon.png"
       />
       <Stack sx={{ alignItems: 'center' }} >
-        <Typography align='center' variant="h6">Failed to patch {imageName}</Typography>
+        <Typography align='center' variant="h6">Failed to patch {selectedImage}</Typography>
         <Stack direction="row">
           {showCommandLineButton}
           <Typography align='center' variant="h6">{errorText}</Typography>
@@ -415,8 +418,6 @@ export function App() {
             patchImage={patchImage}
             useContainerdChecked={useContainerdChecked}
             setUseContainerdChecked={setUseContainerdChecked}
-            imageName={imageName}
-            setImageName={setImageName}
             jsonFileName={jsonFileName}
             setJsonFileName={setJsonFileName}
             vulnerabilityCount={vulnerabilityCount}
