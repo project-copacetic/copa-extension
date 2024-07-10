@@ -209,6 +209,7 @@ export function App() {
         "copa-extension-volume:/output",
         "copa-extension",
         `${selectedImage}`,
+        `${jsonFileName}`,
         `${getImageTag()}`,
         `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
         `${useContainerdChecked ? 'custom-socket' : 'buildx'}`,
