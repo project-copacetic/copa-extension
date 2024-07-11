@@ -1,5 +1,6 @@
 IMAGE?=copacetic/copacetic-docker-desktop-extension
 TAG?=latest
+COPA_VERSION?=0.7.0
 
 BUILDER=buildx-multi-arch
 
@@ -22,7 +23,7 @@ push-extension: prepare-buildx ## Build & Upload extension image to hub. Do not 
 	docker pull $(IMAGE):$(TAG) && echo "Failure: Tag already exists" || docker buildx build --push --builder=$(BUILDER) --platform=linux/amd64,linux/arm64 --build-arg TAG=$(TAG) --tag=$(IMAGE):$(TAG) .
 
 build-helper-images:
-	docker build --platform=linux/amd64 --build-arg copa_version=0.6.2 -t copa-extension container/copa-extension
+	docker build --platform=linux/amd64 --build-arg copa_version=$(COPA_VERSION) -t copa-extension container/copa-extension
 	docker build -t cat-tool container/cat-tool
 
 help: ## Show this help
