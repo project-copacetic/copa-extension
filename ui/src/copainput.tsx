@@ -75,35 +75,33 @@ export function CopaInput(props: any) {
   }
 
   const validateInput = () => {
-    let foundError: boolean = false;
+    let inputValid: boolean = true;
     if (props.selectedImage === null || props.selectedImage.length === 0) {
-      foundError = true;
+      inputValid = false;
       setSelectedImageHelperText("Image input can not be empty.");
     } else if (hasWhiteSpace(props.selectedImage)) {
-      foundError = true;
-      setSelectedImageHelperText("Image input can not have whitespace.")
+      inputValid = false;
+      setSelectedImageHelperText("Image input can not have whitespace.");
     } else {
 
       let seperateSplit = props.selectedImage.split(':');
       let numColons = seperateSplit.length - 1;
 
       if (numColons > 1) {
-        foundError = true;
+        inputValid = false;
         setSelectedImageHelperText("Image input can only have one colon.");
       } else {
         if (seperateSplit[0].length === 0) {
-          foundError = true;
-          setSelectedImageHelperText("Image input can not be a tag only.")
+          inputValid = false;
+          setSelectedImageHelperText("Image input can not be a tag only.");
         }
       }
     }
-    if (foundError) {
-      setSelectedImageError(true);
-    } else {
-      setSelectedImageError(false);
-      props.patchImage();
+    if (inputValid) {
+      setSelectedImageHelperText("");
     }
-
+    setSelectedImageError(!inputValid);
+    return inputValid;
   }
 
   const handleLocalImageSwitchChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,37 +119,40 @@ export function CopaInput(props: any) {
 
   return (
     <Stack spacing={1.5}>
-      <Autocomplete
-        freeSolo
-        disablePortal
-        value={props.selectedImage}
-        onInputChange={handleSelectedImageChange}
-        id="image-select-combo-box"
-        options={dockerImages}
-        onOpen={(event: React.SyntheticEvent) => {
-          props.setVulnState(VULN_UNLOADED);
-        }}
-        sx={{ width: 300 }}
-        disabled={props.vulnState === VULN_LOADING}
-        renderInput={(params) =>
-          <TextField
-            {...params}
-            label={selectImageLabel}
-            error={selectedImageError}
-            helperText={!props.useContainerdChecked &&
-              <Stack direction="row" alignItems="center" spacing={1.05}>
-                <Tooltip title={"Enable containerd image store to patch "
-                  + "local images (i.e. built or tagged locally but not pushed to a registry)."}>
-                  <InfoIcon fontSize='small' />
-                </Tooltip>
-                <Link href="#" onClick={() => {
-                  ddClient.host.openExternal("https://docs.docker.com/desktop/containerd/")
-                }}>
-                  <Typography variant='caption'>Containerd image store not enabled</Typography>
-                </Link>
-              </Stack>}
-          />}
-      />
+      <Stack>
+        <Autocomplete
+          freeSolo
+          disablePortal
+          value={props.selectedImage}
+          onInputChange={handleSelectedImageChange}
+          id="image-select-combo-box"
+          options={dockerImages}
+          onOpen={(event: React.SyntheticEvent) => {
+            props.setVulnState(VULN_UNLOADED);
+          }}
+          sx={{ width: 300 }}
+          disabled={props.vulnState === VULN_LOADING}
+          renderInput={(params) =>
+            <TextField
+              {...params}
+              label={selectImageLabel}
+              error={selectedImageError}
+              helperText={selectedImageHelperText}
+            />}
+        />
+        {!props.useContainerdChecked &&
+          <Stack direction="row" alignItems="center" spacing={1.05}>
+            <Tooltip title={"Enable containerd image store to patch "
+              + "local images (i.e. built or tagged locally but not pushed to a registry)."}>
+              <InfoIcon fontSize='small' />
+            </Tooltip>
+            <Link href="#" onClick={() => {
+              ddClient.host.openExternal("https://docs.docker.com/desktop/containerd/")
+            }}>
+              <Typography variant='caption'>Containerd image store not enabled</Typography>
+            </Link>
+          </Stack>}
+      </Stack>
       <FormControl fullWidth>
         <InputLabel id="demo-simple-select-label" variant='outlined'>Scanner</InputLabel>
         <Select
@@ -197,13 +198,25 @@ export function CopaInput(props: any) {
       />
       <Stack direction="row" spacing={2}>
 
-        <Button disabled={props.vulnState === VULN_LOADING || (props.vulnState === VULN_LOADED && sumValues(props.vulnerabilityCount) === 0)} onClick={() => {
-          if (props.vulnState === VULN_UNLOADED) {
-            props.triggerTrivy();
-          } else if (props.vulnState === VULN_LOADED) {
-            validateInput();
-          }
-        }}>{props.vulnState === VULN_LOADED ? "Patch Image" : "Scan Image"}</Button>
+        <Button disabled={
+          props.vulnState === VULN_LOADING
+          || (props.vulnState === VULN_LOADED
+            && sumValues(props.vulnerabilityCount) === 0)
+        }
+          onClick={() => {
+            if (props.vulnState === VULN_UNLOADED) {
+              // If the input returns false with no errors, trigger the scan.
+              const inputValid = validateInput();
+              if (inputValid) {
+                props.triggerTrivy();
+              }
+            } else if (props.vulnState === VULN_LOADED) {
+              props.triggerCopa();
+            }
+          }}
+        >
+          {props.vulnState === VULN_LOADED ? "Patch Image" : "Scan Image"}
+        </Button>
         <Button onClick={() => {
           props.setInSettings(!props.inSettings);
         }} >Settings</Button>

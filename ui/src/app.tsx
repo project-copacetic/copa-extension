@@ -240,7 +240,7 @@ export function App() {
           onClose(exitCode: number) {
             if (exitCode == 0) {
               ddClient.desktopUI.toast.success(`Trivy scan finished`);
-              getTrivyOutput()
+              getTrivyOutput();
             } else if (exitCode !== 137) {
               setVulnState(VULN_UNLOADED);
               ddClient.desktopUI.toast.error(`Trivy scan failed: ${stderr}`);
