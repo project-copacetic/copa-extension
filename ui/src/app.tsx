@@ -74,9 +74,9 @@ export function App() {
     const output = await ddClient.docker.cli.exec("run", [
       "-v",
       "copa-extension-volume:/data",
-      "-e",
-      `file=data/${jsonFileName}`,
-      "cat-tool"
+      "busybox",
+      "cat",
+      `data/${jsonFileName}`
     ]);
     const data = JSON.parse(output.stdout);
     const severityMap: Record<string, number> = {
