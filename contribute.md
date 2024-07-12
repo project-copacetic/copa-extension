@@ -3,14 +3,14 @@
 Before proceeding, ensure that Docker Desktop is installed on your computer and using the WSL backend if using Windows.
 
 ## Building the copa-extenion image
-In order to run the extension locally, you need to build the `copa-extension` image and `cat-tool` image specified in the `/container` folder.
+In order to run the extension locally, you need to build the `copa-extension` image image specified in the `/container/copa-extension` folder.
 
-Run the following make command in the root directory to install both:
+Run the following make command in the root directory to install it:
 
 ```
-make build-helper-images
+make build-copa-image
 ```
-After the command finishes, confirm that the images `copa-extension` and `cat-tool` are listed when you run the command `docker images`.
+After the command finishes, confirm that the image `copa-extension` is listed when you run the command `docker images`.
 
 ## Building the frontend image
 
