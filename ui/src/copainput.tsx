@@ -211,6 +211,7 @@ export function CopaInput(props: any) {
                 props.triggerTrivy();
               }
             } else if (props.vulnState === VULN_LOADED) {
+              props.setVulnState(VULN_UNLOADED);
               props.patchImage();
             }
           }}

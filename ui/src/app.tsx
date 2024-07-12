@@ -17,7 +17,8 @@ import {
   IconButton,
   Grow,
   Collapse,
-  Paper
+  Paper,
+  LinearProgress
 } from '@mui/material';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { CopaInput } from './copainput';
@@ -143,6 +144,12 @@ export function App() {
     } else {
       setErrorText("An unexpected error occurred.");
     }
+  }
+
+  const generateJsonFileName = (imageName: string) => {
+    const str1 = imageName.split(':').join('.');
+    const str2 = str1.split("/").join('.');
+    return str2 + ".json";
   }
 
   async function triggerTrivy() {
@@ -290,7 +297,10 @@ export function App() {
             setShowLoading(false);
             if (exitCode == 0) {
               setShowSuccess(true);
-              ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${baseImageName}:${getImageTag()}`);
+              const newImageName = `${baseImageName}:${getImageTag()}`;
+              ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${newImageName}`);
+              setSelectedImage(newImageName);
+              setJsonFileName(generateJsonFileName(newImageName));
             } else {
               setShowFailure(true);
               ddClient.desktopUI.toast.error(`Copacetic - Failed to patch image ${selectedImage}`);
@@ -302,6 +312,7 @@ export function App() {
     );
     return { stdout, stderr };
   }
+
 
   const showCommandLineButton = (
     <IconButton aria-label="show-command-line" onClick={() => { setShowCommandLine(!showCommandLine) }}>
@@ -321,7 +332,7 @@ export function App() {
           {showCommandLineButton}
           <Typography variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
         </Stack>
-        <Collapse in={showCommandLine}>
+        <Collapse unmountOnExit in={showCommandLine}>
           <CommandLine totalOutput={totalOutput}></CommandLine>
         </Collapse>
       </Stack>
@@ -329,30 +340,54 @@ export function App() {
   )
 
   const successPage = (
-    <Stack sx={{ alignItems: 'center' }} spacing={1.5}>
+    <Stack sx={{ alignItems: 'center' }} spacing={2}>
       <Box
         component="img"
         alt="celebration icon"
         src="celebration-icon.png"
       />
       <Stack sx={{ alignItems: 'center' }}>
-        <Typography align='center' variant="h6">Successfully patched image</Typography>
+        <Typography align='center' variant="h6">Created new patched image</Typography>
         <Stack direction="row">
           {showCommandLineButton}
           <Typography align='center' variant="h6">{selectedImage}!</Typography>
         </Stack>
       </Stack>
-      <Button
-        onClick={() => {
-          clearInput();
-          setShowSuccess(false);
-          setShowPreload(true);
-        }}>
-        Return
-      </Button>
-      <Collapse in={showCommandLine}>
+      <Collapse unmountOnExit in={showCommandLine}>
         <CommandLine totalOutput={totalOutput}></CommandLine>
       </Collapse>
+      <Stack direction={showCommandLine ? "row" : "column"} spacing={2} sx={{ alignSelf: showCommandLine ? 'start' : 'inherit', alignItems: 'center' }}>
+        <Stack direction="row" spacing={2}>
+          <Button onClick={() => {
+            triggerTrivy();
+          }}
+            disabled={vulnState === VULN_LOADING}
+          >
+            Scan Patched Image
+          </Button>
+          <Button
+            onClick={() => {
+              clearInput();
+              setShowSuccess(false);
+              setShowPreload(true);
+            }}
+            disabled={vulnState === VULN_LOADING}>
+            Return
+          </Button>
+        </Stack>
+        {vulnState !== VULN_UNLOADED &&
+          <Typography >
+            <Box sx={{ fontWeight: 'bold', m: 1 }}>Vulnerabilities:
+            </Box>
+          </Typography>
+        }
+        {vulnState !== VULN_UNLOADED &&
+          < VulnerabilityDisplay
+            vulnerabilityCount={vulnerabilityCount}
+            vulnState={vulnState}
+            setVulnState={setVulnState}
+          />}
+      </Stack>
     </Stack>
   );
 
@@ -370,14 +405,14 @@ export function App() {
           <Typography align='center' variant="h6">{errorText}</Typography>
         </Stack>
       </Stack>
+      <Collapse unmountOnExit in={showCommandLine}>
+        <CommandLine totalOutput={totalOutput}></CommandLine>
+      </Collapse>
       <Button onClick={() => {
         clearInput();
         setShowFailure(false);
         setShowPreload(true);
       }}>Return</Button>
-      <Collapse in={showCommandLine}>
-        <CommandLine totalOutput={totalOutput}></CommandLine>
-      </Collapse>
     </Stack>
   )
 
@@ -388,7 +423,7 @@ export function App() {
       alignItems="center"
       minHeight="100vh"
     >
-      <Stack direction="row" spacing={2}>
+      <Stack direction="row" spacing={2} alignItems='center'>
         <Stack sx={{ alignItems: 'center' }} spacing={1.5}>
           <Box
             component="img"
