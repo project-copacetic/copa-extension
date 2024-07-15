@@ -44,7 +44,7 @@ export function App() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedScanner, setSelectedScanner] = useState<string | undefined>("trivy");
   const [selectedImageTag, setSelectedImageTag] = useState<string | undefined>(undefined);
-  const [selectedTimeout, setSelectedTimeout] = useState<string | undefined>(undefined);
+  const [selectedTimeout, setSelectedTimeout] = useState<string>("5m");
   const [totalOutput, setTotalOutput] = useState("");
   const [errorText, setErrorText] = useState("");
   const [useContainerdChecked, setUseContainerdChecked] = useState(false);
