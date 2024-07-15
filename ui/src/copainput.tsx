@@ -111,9 +111,15 @@ export function CopaInput(props: any) {
   const handleSelectedImageChange = (event: any, newValue: string | null) => {
     props.setSelectedImage(newValue);
     if (newValue !== null) {
-      let str1 = newValue.split(':').join('.');
-      let str2 = str1.split("/").join('.');
+      const split = newValue.split(":");
+      const str1 = split.join('.');
+      const str2 = str1.split("/").join('.');
       props.setJsonFileName(str2 + ".json");
+      if (split.length === 1) {
+        props.setSelectedImageTag("latest-patched");
+      } else {
+        props.setSelectedImageTag(split[1] + "-patched");
+      }
     }
   }
 
