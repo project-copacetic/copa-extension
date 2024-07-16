@@ -31,6 +31,12 @@ const VULN_UNLOADED = 0;
 const VULN_LOADING = 1;
 const VULN_LOADED = 2;
 
+const VOLUME_NAME = "copa-extension-volume";
+const TRIVY_CONTAINER_NAME = "trivy-copa-extension-container";
+const BUSYBOX_CONTAINER_NAME = "busybox-copa-extension-container";
+const COPA_CONTAINER_NAME = "copa-extension-container";
+const JSON_FILE_NAME = "scan.json";
+
 
 export function App() {
 
@@ -48,8 +54,6 @@ export function App() {
   const [totalOutput, setTotalOutput] = useState("");
   const [errorText, setErrorText] = useState("");
   const [useContainerdChecked, setUseContainerdChecked] = useState(false);
-  const [jsonFileName, setJsonFileName] = useState("default");
-
 
   const [inSettings, setInSettings] = useState(false);
   const [showPreload, setShowPreload] = useState(true);
@@ -72,12 +76,15 @@ export function App() {
   });
 
   const getTrivyOutput = async () => {
+
     const output = await ddClient.docker.cli.exec("run", [
       "-v",
       "copa-extension-volume:/data",
+      "--name",
+      `${BUSYBOX_CONTAINER_NAME}`,
       "busybox",
       "cat",
-      `data/${jsonFileName}`
+      `data/${JSON_FILE_NAME}`
     ]);
     const data = JSON.parse(output.stdout);
     const severityMap: Record<string, number> = {
@@ -146,30 +153,34 @@ export function App() {
     }
   }
 
-  const generateJsonFileName = (imageName: string) => {
-    const str1 = imageName.split(':').join('.');
-    const str2 = str1.split("/").join('.');
-    return str2 + ".json";
-  }
-
   async function triggerTrivy() {
     let stdout = ""
     let stderr = ""
 
     setVulnState(VULN_LOADING);
 
-    // Force remove previous container
+    // Remove all previous containers.
     await ddClient.docker.cli.exec("rm", [
       "-f",
-      "trivy-copa-extension-container",
+      `${TRIVY_CONTAINER_NAME}`,
+      `${BUSYBOX_CONTAINER_NAME}`,
+      `${COPA_CONTAINER_NAME}`
     ]);
+
+    // Remove old volume
+    await ddClient.docker.cli.exec("volume", [
+      "rm",
+      "-f",
+      VOLUME_NAME
+    ]);
+
     let commandParts: string[] = [
       "--mount",
       "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
       "-v",
-      "copa-extension-volume:/output",
+      `${VOLUME_NAME}:/output`,
       "--name",
-      "trivy-copa-extension-container",
+      `${TRIVY_CONTAINER_NAME}`,
       "aquasec/trivy",
       "image",
       "--vuln-type",
@@ -178,7 +189,7 @@ export function App() {
       "--format",
       "json",
       "-o",
-      `output/${jsonFileName}`,
+      `output/${JSON_FILE_NAME}`,
       `${selectedImage}`
     ];
     ({ stdout, stderr } = await runTrivy(commandParts, stdout, stderr));
@@ -211,12 +222,13 @@ export function App() {
       let commandParts: string[] = [
         "--mount",
         "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
-        // "--name=copa-extension",
+        "--name",
+        `${COPA_CONTAINER_NAME}`,
         "-v",
         "copa-extension-volume:/output",
         "copa-extension",
         `${selectedImage}`,
-        `${jsonFileName}`,
+        `${JSON_FILE_NAME}`,
         `${getImageTag()}`,
         `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
         `${useContainerdChecked ? 'custom-socket' : 'buildx'}`,
@@ -300,7 +312,6 @@ export function App() {
               const newImageName = `${baseImageName}:${getImageTag()}`;
               ddClient.desktopUI.toast.success(`Copacetic - Created new patched image ${newImageName}`);
               setSelectedImage(newImageName);
-              setJsonFileName(generateJsonFileName(newImageName));
             } else {
               setShowFailure(true);
               ddClient.desktopUI.toast.error(`Copacetic - Failed to patch image ${selectedImage}`);
@@ -454,8 +465,6 @@ export function App() {
             patchImage={patchImage}
             useContainerdChecked={useContainerdChecked}
             setUseContainerdChecked={setUseContainerdChecked}
-            jsonFileName={jsonFileName}
-            setJsonFileName={setJsonFileName}
             vulnerabilityCount={vulnerabilityCount}
             triggerTrivy={triggerTrivy}
             getTrivyOutput={getTrivyOutput}

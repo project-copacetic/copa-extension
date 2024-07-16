@@ -113,7 +113,6 @@ export function CopaInput(props: any) {
     if (newValue !== null) {
       let str1 = newValue.split(':').join('.');
       let str2 = str1.split("/").join('.');
-      props.setJsonFileName(str2 + ".json");
     }
   }
 
