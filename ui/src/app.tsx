@@ -367,7 +367,19 @@ export function App() {
       <Collapse unmountOnExit in={showCommandLine}>
         <CommandLine totalOutput={totalOutput}></CommandLine>
       </Collapse>
-      <Stack direction={showCommandLine ? "row" : "column"} spacing={2} sx={{ alignSelf: showCommandLine ? 'start' : 'inherit', alignItems: 'center' }}>
+      <Stack direction="column" spacing={2} sx={{ alignSelf: 'inherit', alignItems: 'center' }}>
+        {vulnState !== VULN_UNLOADED &&
+          <Typography >
+            <Box sx={{ fontWeight: 'bold'}}>Vulnerabilities:
+            </Box>
+          </Typography>
+        }
+        {vulnState !== VULN_UNLOADED &&
+          < VulnerabilityDisplay
+            vulnerabilityCount={vulnerabilityCount}
+            vulnState={vulnState}
+            setVulnState={setVulnState}
+          />}
         <Stack direction="row" spacing={2}>
           <Button onClick={() => {
             triggerTrivy();
@@ -386,18 +398,6 @@ export function App() {
             Return
           </Button>
         </Stack>
-        {vulnState !== VULN_UNLOADED &&
-          <Typography >
-            <Box sx={{ fontWeight: 'bold', m: 1 }}>Vulnerabilities:
-            </Box>
-          </Typography>
-        }
-        {vulnState !== VULN_UNLOADED &&
-          < VulnerabilityDisplay
-            vulnerabilityCount={vulnerabilityCount}
-            vulnState={vulnState}
-            setVulnState={setVulnState}
-          />}
       </Stack>
     </Stack>
   );
