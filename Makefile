@@ -1,10 +1,19 @@
 IMAGE?=copacetic/copacetic-docker-desktop-extension
 TAG?=latest
+COPA_VERSION?=latest
 
 BUILDER=buildx-multi-arch
 
 INFO_COLOR = \033[0;36m
 NO_COLOR   = \033[m
+
+# Check if COPA_VERSION is equal to "latest"
+ifeq ($(COPA_VERSION),latest)
+    latest_tag := $(shell curl --retry 5 -s "https://api.github.com/repos/project-copacetic/copacetic/releases/latest" | jq -r '.tag_name')
+    version := $(subst v,,$(latest_tag))
+else
+    version := $(COPA_VERSION)
+endif
 
 build-extension: ## Build service image to be deployed as a desktop extension
 	docker build --tag=$(IMAGE):$(TAG) .
@@ -20,6 +29,9 @@ prepare-buildx: ## Create buildx builder for multi-arch build, if not exists
 
 push-extension: prepare-buildx ## Build & Upload extension image to hub. Do not push if tag already exists: make push-extension tag=0.1
 	docker pull $(IMAGE):$(TAG) && echo "Failure: Tag already exists" || docker buildx build --push --builder=$(BUILDER) --platform=linux/amd64,linux/arm64 --build-arg TAG=$(TAG) --tag=$(IMAGE):$(TAG) .
+
+build-copa-image:
+	docker build --platform=linux/amd64 --build-arg copa_version=$(version) -t copa-extension container/copa-extension
 
 help: ## Show this help
 	@echo Please specify a build target. The choices are:
