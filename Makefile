@@ -1,4 +1,3 @@
-SHELL := /bin/bash
 IMAGE?=copacetic/copacetic-docker-desktop-extension
 TAG?=latest
 COPA_VERSION?=latest
