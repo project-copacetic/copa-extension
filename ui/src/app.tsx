@@ -48,9 +48,9 @@ export function App() {
 
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedScanner, setSelectedScanner] = useState<string | undefined>("trivy");
-  const [selectedImageTag, setSelectedImageTag] = useState<string | undefined>(undefined);
-  const [selectedTimeout, setSelectedTimeout] = useState<string | undefined>(undefined);
+  const [selectedScanner, setSelectedScanner] = useState<string>("trivy");
+  const [selectedImageTag, setSelectedImageTag] = useState<string>("");
+  const [selectedTimeout, setSelectedTimeout] = useState<string>("5m");
   const [totalOutput, setTotalOutput] = useState("");
   const [errorText, setErrorText] = useState("");
   const [useContainerdChecked, setUseContainerdChecked] = useState(false);
@@ -129,9 +129,9 @@ export function App() {
 
   const clearInput = () => {
     setSelectedImage(null);
-    setSelectedScanner(undefined);
-    setSelectedImageTag(undefined);
-    setSelectedTimeout(undefined);
+    setSelectedScanner("trivy");
+    setSelectedImageTag("");
+    setSelectedTimeout("5m");
     setVulnerabilityCount({
       "UNKNOWN": 0,
       "LOW": 0,
