@@ -3,11 +3,12 @@
 set -ex;
 
 image=$1
-patched_tag=$2
-timeout=$3
-connection_format=$4
-format=$5
-output_file=$6
+report=$2
+patched_tag=$3
+timeout=$4
+connection_format=$5
+format=$6
+output_file=$7
 
 # parse image into image name
 image_no_tag=$(echo "$image" | cut -d':' -f1)
@@ -38,12 +39,8 @@ case "$connection_format" in
     ;;
 esac
 
-
-# run trivy to generate scan for image
-trivy image --vuln-type os --ignore-unfixed -f json -o scan.json $image
-
 # run copa to patch image
-if copa patch -i $image -r scan.json -t "$patched_tag" $connection --timeout $timeout $output;
+if copa patch -i $image -r output/"$report" -t "$patched_tag" $connection --timeout $timeout $output;
 then
     patched_image="$image_no_tag:$patched_tag"
     echo "patched-image=$patched_image"
