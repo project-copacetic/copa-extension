@@ -112,8 +112,6 @@ export function CopaInput(props: any) {
     props.setSelectedImage(newValue);
     if (newValue !== null) {
       const split = newValue.split(":");
-      const str1 = split.join('.');
-      const str2 = str1.split("/").join('.');
       if (split.length === 1) {
         props.setSelectedImageTag("latest-patched");
       } else {
