@@ -1,5 +1,5 @@
 # Docker Desktop Copa Extension
-
+Copa Docker Desktop Extension
 ![starting page for the extension](https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo1.png)
 
 ## What is this extension for?
