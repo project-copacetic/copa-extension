@@ -10,7 +10,7 @@ This extension allows the user to leverage the abilities of the CLI tool without
 
 ## How does it work?
 
-This extension is a web application displayed in a tab of the dashboard in Docker Desktop. It is written in Javascript using the React Javascript library and Material UI react component library. It creates three containers to scan an image, send vulnerability information to the frontend, and patch an image. It uses the `copa-extension-volume` to share the scan result between the three containers.
+This extension is a web application displayed in a tab of the dashboard in Docker Desktop. It is written in JavaScript using the React JavaScript library and Material UI React component library. It creates three containers to scan an image, send vulnerability information to the frontend, and patch an image. It uses the `copa-extension-volume` to share the scan result between the three containers.
 
 ### Images/Containers
 
