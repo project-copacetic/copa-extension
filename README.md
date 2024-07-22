@@ -41,4 +41,4 @@ docker extension install copacetic/copacetic-docker-desktop-extension:0.1.0
 
 ## Contributing
 
-We welcome contributions from the community! Read more about contributing [here](contribute.md).
+We welcome contributions from the community! Read more about contributing [here](contributing.md).
