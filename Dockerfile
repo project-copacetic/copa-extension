@@ -27,7 +27,7 @@ RUN npm run build
 FROM alpine
 LABEL org.opencontainers.image.title="Copacetic" \
     org.opencontainers.image.description="Directly patch container images given the vulnerability scanning results from popular tools like Trivy." \
-    org.opencontainers.image.vendor="Microsoft" \
+    org.opencontainers.image.vendor="Project Copacetic" \
     com.docker.desktop.extension.api.version="0.3.4" \
     com.docker.extension.screenshots="\
     [ \
