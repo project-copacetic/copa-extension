@@ -33,11 +33,12 @@ LABEL org.opencontainers.image.title="Copacetic" \
     [ \
     {\"alt\": \"Copa Light Screenshot\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo1.png\"}, \
     {\"alt\": \"Copa Dark Screenshot\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo2.png\"}, \
-    {\"alt\": \"Copa Settings\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo3.png\"}, \
-    {\"alt\": \"Copa Scan For Vulnerability\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo4.png\"}, \
-    {\"alt\": \"Copa Vulnerability Display\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo5.png\"}, \
-    {\"alt\": \"Copa Patching Image Show Console\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo6.png\"}, \
-    {\"alt\": \"Copa Success Screen And Patched Image Vuln Display\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo7.png\"} \
+    {\"alt\": \"Copa Scan For Vulnerability\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo3.png\"}, \
+    {\"alt\": \"Copa Vulnerability Display\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo4.png\"}, \
+    {\"alt\": \"Copa Patching Image Show Console\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo5.png\"}, \
+    {\"alt\": \"Copa Success Screen\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo6.png\"}, \
+    {\"alt\": \"Copa Success Screen And Vuln Loading\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo7.png\"} \
+    {\"alt\": \"Copa Success Screen And Patched Image Vuln Display\", \"url\": \"https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo8.png\"} \
     ]" \
     com.docker.desktop.extension.icon="https://raw.githubusercontent.com/project-copacetic/copacetic/main/images/copa-color.png" \
     com.docker.extension.detailed-description="<h1>Copacetic Extension For Docker Desktop</h1> \
