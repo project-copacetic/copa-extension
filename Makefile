@@ -1,5 +1,6 @@
 IMAGE?=copacetic/copacetic-docker-desktop-extension
 TAG?=0.1.0
+COPA_VERSION?=latest
 
 BUILDER=buildx-multi-arch
 
