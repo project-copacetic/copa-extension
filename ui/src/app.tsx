@@ -275,12 +275,12 @@ export function App() {
 
 
   async function isContainerdEnabled() {
-    const result = await ddClient.docker.cli.exec("info", [
-      "--format",
-      '"{{ json . }}"',
+    const result = await ddClient.docker.cli.exec('info', [
+      '-f',
+      '"{{ .DriverStatus }}"',
     ]);
-    const info = JSON.parse(result.stdout);
-    return info.Driver === "overlayfs";
+    const output = result.stdout;
+    return output.includes('driver-type io.containerd.snapshotter.v1');
   }
 
 
@@ -370,7 +370,7 @@ export function App() {
       <Stack direction="column" spacing={2} sx={{ alignSelf: 'inherit', alignItems: 'center' }}>
         {vulnState !== VULN_UNLOADED &&
           <Typography >
-            <Box sx={{ fontWeight: 'bold'}}>Vulnerabilities:
+            <Box sx={{ fontWeight: 'bold' }}>Vulnerabilities:
             </Box>
           </Typography>
         }
