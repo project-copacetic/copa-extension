@@ -1,5 +1,5 @@
-# Docker Desktop Copa Extension
-Copa Docker Desktop Extension
+# Copa Docker Desktop Extension
+
 ![starting page for the extension](https://raw.githubusercontent.com/jgrer/copa-extension/dockerfile-label-documentation/.github/images/demo1.png)
 
 ## What is this extension for?
@@ -36,3 +36,7 @@ The extension be installed using this link! It can also be installed with the fo
 ```
 docker extension install copacetic/copacetic-docker-desktop-extension:0.1.0
 ```
+
+## Contributing
+
+We welcome contributions from the community! Read more about contributing [here](contribute.md).
