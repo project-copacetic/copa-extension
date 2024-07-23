@@ -277,12 +277,12 @@ export function App() {
 
 
   async function isContainerdEnabled() {
-    const result = await ddClient.docker.cli.exec("info", [
-      "--format",
-      '"{{ json . }}"',
+    const result = await ddClient.docker.cli.exec('info', [
+      '-f',
+      '"{{ .DriverStatus }}"',
     ]);
-    const info = JSON.parse(result.stdout);
-    return info.Driver === "overlayfs";
+    const output = result.stdout;
+    return output.includes('driver-type io.containerd.snapshotter.v1');
   }
 
   async function getLatestCopaVerison() {
