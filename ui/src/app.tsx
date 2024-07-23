@@ -112,6 +112,8 @@ export function App() {
   // On app launch, check for containerd
   useEffect(() => {
     const checkForContainerd = async () => {
+      let test = await getLatestCopaVerison();
+      alert(test);
       let containerdEnabled = await isContainerdEnabled();
       setUseContainerdChecked(containerdEnabled);
     }
@@ -283,6 +285,18 @@ export function App() {
     return info.Driver === "overlayfs";
   }
 
+  async function getLatestCopaVerison() {
+    const result = await ddClient.docker.cli.exec("curlimages/curl", [
+      "--retry",
+      "5",
+      "-s",
+      "https://api.github.com/repos/project-copacetic/copacetic/releases/latest"
+    ]);
+    const output = result.stdout;
+    const data = JSON.parse(output);
+    return data.tag_name;
+  }
+
 
   async function runCopa(commandParts: string[], stdout: string, stderr: string) {
     let latestStderr: string = "";
@@ -370,7 +384,7 @@ export function App() {
       <Stack direction="column" spacing={2} sx={{ alignSelf: 'inherit', alignItems: 'center' }}>
         {vulnState !== VULN_UNLOADED &&
           <Typography >
-            <Box sx={{ fontWeight: 'bold'}}>Vulnerabilities:
+            <Box sx={{ fontWeight: 'bold' }}>Vulnerabilities:
             </Box>
           </Typography>
         }
