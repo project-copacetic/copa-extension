@@ -31,6 +31,8 @@ const VULN_UNLOADED = 0;
 const VULN_LOADING = 1;
 const VULN_LOADED = 2;
 
+const IMAGE_NAME = "ghcr.io/project-copacetic/copa-extension";
+
 const VOLUME_NAME = "copa-extension-volume";
 const TRIVY_CONTAINER_NAME = "trivy-copa-extension-container";
 const BUSYBOX_CONTAINER_NAME = "busybox-copa-extension-container";
@@ -54,6 +56,7 @@ export function App() {
   const [totalOutput, setTotalOutput] = useState("");
   const [errorText, setErrorText] = useState("");
   const [useContainerdChecked, setUseContainerdChecked] = useState(false);
+  const [latestCopaVersion, setLatestCopaVerison] = useState("v0.7.0");
 
   const [inSettings, setInSettings] = useState(false);
   const [showPreload, setShowPreload] = useState(true);
@@ -112,12 +115,18 @@ export function App() {
   // On app launch, check for containerd
   useEffect(() => {
     const checkForContainerd = async () => {
-      let test = await getLatestCopaVerison();
-      alert(test);
       let containerdEnabled = await isContainerdEnabled();
       setUseContainerdChecked(containerdEnabled);
     }
     checkForContainerd();
+  }, []);
+
+  useEffect(() => {
+    const fetchCopaVersion = async () => {
+      const latestVersion = await getLatestCopaVerison();
+      setLatestCopaVerison(latestVersion);
+    } 
+    fetchCopaVersion();
   }, []);
 
   // -----------
@@ -228,7 +237,7 @@ export function App() {
         `${COPA_CONTAINER_NAME}`,
         "-v",
         "copa-extension-volume:/output",
-        "copa-extension",
+        `${IMAGE_NAME}:${latestCopaVersion}`,
         `${selectedImage}`,
         `${JSON_FILE_NAME}`,
         `${getImageTag()}`,
@@ -286,7 +295,8 @@ export function App() {
   }
 
   async function getLatestCopaVerison() {
-    const result = await ddClient.docker.cli.exec("curlimages/curl", [
+    const result = await ddClient.docker.cli.exec("run", [
+      "curlimages/curl",
       "--retry",
       "5",
       "-s",
