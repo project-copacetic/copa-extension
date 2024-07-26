@@ -394,7 +394,7 @@ export function App() {
       <Stack direction="column" spacing={2} sx={{ alignSelf: 'inherit', alignItems: 'center' }}>
         {vulnState !== VULN_UNLOADED &&
           <Typography >
-            <Box sx={{ fontWeight: 'bold' }}>Vulnerabilities:
+            <Box sx={{ fontWeight: 'bold' }}>Fixable Vulnerabilities:
             </Box>
           </Typography>
         }

@@ -193,7 +193,7 @@ export function CopaInput(props: any) {
         </Grow>
       </Collapse>
       <Divider />
-      <Typography ><Box sx={{ fontWeight: 'bold', m: 1 }}>Vulnerabilities</Box></Typography>
+      <Typography ><Box sx={{ fontWeight: 'bold', m: 1 }}>Fixable Vulnerabilities</Box></Typography>
       <VulnerabilityDisplay
         vulnerabilityCount={props.vulnerabilityCount}
         vulnState={props.vulnState}
