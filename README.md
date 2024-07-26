@@ -33,7 +33,7 @@ This extension is a web application displayed in a tab of the dashboard in Docke
 
 ## How do install it?
 
-The extension be installed using this link! It can also be installed with the following command:
+The extension be installed using this [link](https://open.docker.com/extensions/marketplace?extensionId=projectcopacetic/copacetic-docker-desktop-extension&tag=0.1.0)! It can also be installed with the following command:
 
 ```
 docker extension install projectcopacetic/copacetic-docker-desktop-extension:0.1.0
