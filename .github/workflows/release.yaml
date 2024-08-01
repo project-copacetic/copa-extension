@@ -52,5 +52,5 @@ jobs:
             run: |
               version=${{ github.event.inputs.release_version }}
               version_no_v=$(echo "$version" | cut -c2-)
-              make push-extension TAG=$version_nov
+              make push-extension TAG=$version_no_v
 
