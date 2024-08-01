@@ -51,6 +51,6 @@ jobs:
           - name: Push Extension Image
             run: |
               version=${{ github.event.inputs.release_version }}
-              version_nov=$(echo "$version" | cut -c2-)
+              version_no_v=$(echo "$version" | cut -c2-)
               make push-extension TAG=$version_nov
 
