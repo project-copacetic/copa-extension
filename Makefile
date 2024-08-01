@@ -31,7 +31,7 @@ push-extension: prepare-buildx ## Build & Upload extension image to hub. Do not 
 	docker pull $(IMAGE):$(TAG) && echo "Failure: Tag already exists" || docker buildx build --push --builder=$(BUILDER) --platform=linux/amd64,linux/arm64 --build-arg TAG=$(TAG) --tag=$(IMAGE):$(TAG) .
 
 build-copa-image:
-	docker build --platform=linux/amd64 --build-arg copa_version=$(version) -t copa-extension container/copa-extension
+	docker buildx build --platform linux/amd64,linux/arm64 --build-arg copa_version=$(version) -t copa-extension container/copa-extension
 
 help: ## Show this help
 	@echo Please specify a build target. The choices are:
