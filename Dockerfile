@@ -40,7 +40,7 @@ LABEL org.opencontainers.image.title="Copacetic" \
     {\"alt\": \"Copa Success Screen And Vuln Loading\", \"url\": \"https://raw.githubusercontent.com/project-copacetic/copa-extension/main/.github/images/demo7.png\"}, \
     {\"alt\": \"Copa Success Screen And Patched Image Vuln Display\", \"url\": \"https://raw.githubusercontent.com/project-copacetic/copa-extension/main/.github/images/demo8.png\"} \
     ]" \
-    com.docker.desktop.extension.icon="https://raw.githubusercontent.com/project-copacetic/copacetic/main/images/copa-color.png" \
+    com.docker.desktop.extension.icon="https://raw.githubusercontent.com/project-copacetic/copa-extension/00753ea25b27fc43f6508d06138e2b5604fc01b0/copa-color.svg" \
     com.docker.extension.detailed-description="<h1>Copacetic Extension For Docker Desktop</h1> \
     The copa tool is a versatile engine designed to parse container image vulnerability reports from scanners like Trivy, \
     process update packages through various package managers, and apply updates to container images using buildkit, with \
