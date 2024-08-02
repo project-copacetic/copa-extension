@@ -38,7 +38,7 @@ jobs:
 
       - name: Build extension
         run: |
-          make build-extension TAG=test
+          docker build --tag=projectcopacetic/copacetic-docker-desktop-extension:test .
 
       - name: Kill Mono process running on port 8084 to unblock it # https://github.com/actions/runner-images/issues/2821
         shell: bash
