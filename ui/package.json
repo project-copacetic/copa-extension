@@ -8,7 +8,7 @@
     "@docker/extension-api-client": "0.3.4",
     "@emotion/react": "11.13.0",
     "@emotion/styled": "11.13.0",
-    "@mui/material": "5.16.6",
+    "@mui/material": "5.10.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -20,7 +20,7 @@
   "devDependencies": {
     "@docker/extension-api-client-types": "0.3.4",
     "@types/jest": "^29.1.2",
-    "@types/node": "^22.0.2",
+    "@types/node": "^18.7.18",
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.1.0",
