@@ -18,6 +18,7 @@ import { DesktopUI } from '@docker/extension-test-helper';
 import { exec as originalExec } from 'child_process';
 import { describe, beforeAll, afterAll, test } from '@jest/globals';
 import * as util from 'util';
+import { WaitForSelectorOptions } from 'puppeteer-core';
 
 export const exec = util.promisify(originalExec);
 
@@ -48,8 +49,8 @@ afterAll(async () => {
   console.log('extension uninstalled');
 });
 
-describe('Test Logs Explorer UI', () => {
-  test('should display volumes and their size', async () => {
+describe('Test Main Workflow of Extension', () => {
+  test('display the patched image', async () => {
     dashboard = await DesktopUI.start();
 
     const eFrame = await dashboard.navigateToExtension(
@@ -68,6 +69,12 @@ describe('Test Logs Explorer UI', () => {
     if (scanPatchImageButton !== null) {
       await scanPatchImageButton.click();
       await scanPatchImageButton.dispose();
+    }
+
+    const vulnDisplay = await eFrame.waitForSelector('#loaded-vuln-display-page', {timeout: 120000});
+    if (vulnDisplay !== null) {
+      console.log(vulnDisplay);
+      await vulnDisplay.dispose();
     }
     
   });
