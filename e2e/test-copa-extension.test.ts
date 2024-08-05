@@ -80,10 +80,13 @@ describe('Test Main Workflow of Extension', () => {
       await scanPatchImageButton.dispose();
     }
 
-    const patchedImageElement = await page.waitForSelector('#new-patched-image-name-text', { timeout: 240000 });
+    const patchedImageElement = await eFrame.waitForSelector('#new-patched-image-name-text', { timeout: 240000 });
     let patchedImageText = "";
     if (patchedImageElement !== null) {
-      patchedImageText = await patchedImageElement.evaluate(element => element.textContent);
+      const evalText = await patchedImageElement.evaluate(element => element.textContent);
+      if (evalText !== null) {
+        patchedImageText = evalText;
+      }
       await patchedImageElement.dispose();
     }
 
