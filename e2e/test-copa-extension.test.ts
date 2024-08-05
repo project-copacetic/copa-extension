@@ -60,48 +60,42 @@ describe('Test Main Workflow of Extension', () => {
 
     const imageInput = await eFrame.waitForSelector("#image-select-combo-box");
 
-    if (imageInput !== null) {
-      console.log('input nginx:1.21.6 image');
-      await imageInput.type('nginx:1.21.6');
-      await imageInput.dispose();
-    }
+    console.log('input nginx:1.21.6 image');
+    await imageInput?.type('nginx:1.21.6');
+    await imageInput?.dispose();
+
 
     const scanPatchImageButton = await eFrame.waitForSelector('#scan-or-patch-image-button');
 
-    if (scanPatchImageButton !== null) {
-      console.log('click scan button');
-      await scanPatchImageButton.click();
-    }
+    console.log('click scan button');
+    await scanPatchImageButton?.click();
+
 
     const vulnDisplay = await eFrame.waitForSelector('#loaded-vuln-display-page', { timeout: 120000 });
     console.log('scan finsished (vulns being displayed)')
-    if (vulnDisplay !== null) {
-      await vulnDisplay.dispose();
-    }
+    await vulnDisplay?.dispose();
 
-    if (scanPatchImageButton !== null) {
-      console.log('click patch button');
-      await scanPatchImageButton.click();
-      await scanPatchImageButton.dispose();
-    }
+
+    console.log('click patch button');
+    await scanPatchImageButton?.click();
+    await scanPatchImageButton?.dispose();
+
 
     const loadingText = await eFrame.waitForSelector('#loading-patch-text');
-    if (loadingText !== null) {
-      console.log('confirm loading started');
-      await loadingText.dispose();
-    }
+    console.log('confirm loading started');
+    await loadingText?.dispose();
+
 
     const patchedImageElement = await eFrame.waitForSelector('#new-patched-image-name-text', { timeout: 240000 });
     console.log("scan finished (success)");
     let patchedImageText = "";
-    if (patchedImageElement !== null) {
-      const evalText = await patchedImageElement.evaluate(element => element.textContent);
-      if (evalText !== null) {
-        patchedImageText = evalText;
-        console.log('created patched image: ' + evalText);
-      }
-      await patchedImageElement.dispose();
+    const evalText = await patchedImageElement?.evaluate(element => element.textContent);
+    if (evalText !== null) {
+      patchedImageText = evalText;
+      console.log('created patched image: ' + evalText);
     }
+    await patchedImageElement?.dispose();
+
 
     expect(patchedImageText).toBe("nginx:1.21.6-patched!");
 
