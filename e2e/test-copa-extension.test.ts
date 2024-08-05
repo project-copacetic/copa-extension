@@ -57,34 +57,28 @@ describe('Test Main Workflow of Extension', () => {
       'projectcopacetic/copacetic-docker-desktop-extension',
     );
 
-
     const imageInput = await eFrame.waitForSelector("#image-select-combo-box");
 
     console.log('input nginx:1.21.6 image');
     await imageInput?.type('nginx:1.21.6');
     await imageInput?.dispose();
 
-
     const scanPatchImageButton = await eFrame.waitForSelector('#scan-or-patch-image-button');
 
     console.log('click scan button');
     await scanPatchImageButton?.click();
 
-
     const vulnDisplay = await eFrame.waitForSelector('#loaded-vuln-display-page', { timeout: 120000 });
     console.log('scan finsished (vulns being displayed)')
     await vulnDisplay?.dispose();
-
 
     console.log('click patch button');
     await scanPatchImageButton?.click();
     await scanPatchImageButton?.dispose();
 
-
     const loadingText = await eFrame.waitForSelector('#loading-patch-text');
     console.log('confirm loading started');
     await loadingText?.dispose();
-
 
     const patchedImageElement = await eFrame.waitForSelector('#new-patched-image-name-text', { timeout: 240000 });
     console.log("scan finished (success)");
@@ -96,8 +90,12 @@ describe('Test Main Workflow of Extension', () => {
     }
     await patchedImageElement?.dispose();
 
-
     expect(patchedImageText).toBe("nginx:1.21.6-patched!");
 
+    const output = await exec(`docker images`);
+    console.log(output);
+
+    expect(output.stdout.includes('nginx')).toBe(true);
+    expect(output.stdout.includes('1.21.6-patched')).toBe(true);
   });
 });
