@@ -85,6 +85,10 @@ describe('Test Main Workflow of Extension', () => {
       await scanPatchImageButton.dispose();
     }
 
+    const loadingText = await eFrame.waitForSelector('#loading-patch-text');
+    console.log('confirm loading started');
+    loadingText.dispose();
+
     const patchedImageElement = await eFrame.waitForSelector('#new-patched-image-name-text', { timeout: 240000 });
     console.log("scan finished (success)");
     let patchedImageText = "";
