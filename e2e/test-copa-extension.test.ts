@@ -81,14 +81,14 @@ describe('Test Main Workflow of Extension', () => {
 
     if (scanPatchImageButton !== null) {
       console.log('click patch button');
-      scanPatchImageButton.click();
+      await scanPatchImageButton.click();
       await scanPatchImageButton.dispose();
     }
 
     const loadingText = await eFrame.waitForSelector('#loading-patch-text');
     if (loadingText !== null) {
       console.log('confirm loading started');
-      loadingText.dispose();
+      await loadingText.dispose();
     }
 
     const patchedImageElement = await eFrame.waitForSelector('#new-patched-image-name-text', { timeout: 240000 });
