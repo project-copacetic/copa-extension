@@ -98,6 +98,7 @@ describe('Test Main Workflow of Extension', () => {
       const evalText = await patchedImageElement.evaluate(element => element.textContent);
       if (evalText !== null) {
         patchedImageText = evalText;
+        console.log('created patched image: ' + evalText);
       }
       await patchedImageElement.dispose();
     }
