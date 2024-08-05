@@ -69,7 +69,7 @@ describe('Test Main Workflow of Extension', () => {
     await scanPatchImageButton?.click();
 
     const vulnDisplay = await eFrame.waitForSelector('#loaded-vuln-display-page', { timeout: 120000 });
-    console.log('scan finsished (vulns being displayed)')
+    console.log('scan finished (vulns being displayed)')
     await vulnDisplay?.dispose();
 
     console.log('click patch button');
