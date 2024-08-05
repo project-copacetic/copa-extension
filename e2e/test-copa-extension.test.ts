@@ -57,9 +57,11 @@ describe('Test Main Workflow of Extension', () => {
       'projectcopacetic/copacetic-docker-desktop-extension',
     );
 
+
     const imageInput = await eFrame.waitForSelector("#image-select-combo-box");
 
     if (imageInput !== null) {
+      console.log('input nginx:1.21.6 image');
       await imageInput.type('nginx:1.21.6');
       await imageInput.dispose();
     }
@@ -67,20 +69,24 @@ describe('Test Main Workflow of Extension', () => {
     const scanPatchImageButton = await eFrame.waitForSelector('#scan-or-patch-image-button');
 
     if (scanPatchImageButton !== null) {
+      console.log('click scan button');
       await scanPatchImageButton.click();
     }
 
     const vulnDisplay = await eFrame.waitForSelector('#loaded-vuln-display-page', { timeout: 120000 });
+    console.log('scan finsished (vulns being displayed)')
     if (vulnDisplay !== null) {
       await vulnDisplay.dispose();
     }
 
     if (scanPatchImageButton !== null) {
+      console.log('click patch button');
       scanPatchImageButton.click();
       await scanPatchImageButton.dispose();
     }
 
     const patchedImageElement = await eFrame.waitForSelector('#new-patched-image-name-text', { timeout: 240000 });
+    console.log("scan finished (success)");
     let patchedImageText = "";
     if (patchedImageElement !== null) {
       const evalText = await patchedImageElement.evaluate(element => element.textContent);
