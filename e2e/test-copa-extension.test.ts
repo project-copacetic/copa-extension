@@ -68,14 +68,26 @@ describe('Test Main Workflow of Extension', () => {
 
     if (scanPatchImageButton !== null) {
       await scanPatchImageButton.click();
+    }
+
+    const vulnDisplay = await eFrame.waitForSelector('#loaded-vuln-display-page', { timeout: 120000 });
+    if (vulnDisplay !== null) {
+      await vulnDisplay.dispose();
+    }
+
+    if (scanPatchImageButton !== null) {
+      scanPatchImageButton.click();
       await scanPatchImageButton.dispose();
     }
 
-    const vulnDisplay = await eFrame.waitForSelector('#loaded-vuln-display-page', {timeout: 120000});
-    if (vulnDisplay !== null) {
-      console.log(vulnDisplay);
-      await vulnDisplay.dispose();
+    const patchedImageElement = await page.waitForSelector('#new-patched-image-name-text', { timeout: 240000 });
+    let patchedImageText = "";
+    if (patchedImageElement !== null) {
+      patchedImageText = await patchedImageElement.evaluate(element => element.textContent);
+      await patchedImageElement.dispose();
     }
-    
+
+    expect(patchedImageText).toBe("nginx:1.21.6-patched!");
+
   });
 });
