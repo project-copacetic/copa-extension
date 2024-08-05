@@ -93,7 +93,7 @@ describe('Test Main Workflow of Extension', () => {
     expect(patchedImageText).toBe("nginx:1.21.6-patched!");
 
     const output = await exec(`docker images`);
-    console.log(output);
+    console.log(output.stdout);
 
     expect(output.stdout.includes('nginx')).toBe(true);
     expect(output.stdout.includes('1.21.6-patched')).toBe(true);
