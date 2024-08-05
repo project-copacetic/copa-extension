@@ -365,7 +365,7 @@ export function App() {
         <CircularProgress size={100} />
         <Stack direction="row">
           {showCommandLineButton}
-          <Typography variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
+          <Typography variant="h6" sx={{ maxWidth: 400 }} id='loading-patch-text'>Patching Image...</Typography>
         </Stack>
         <Collapse unmountOnExit in={showCommandLine}>
           <CommandLine totalOutput={totalOutput}></CommandLine>
