@@ -90,7 +90,7 @@ describe('Test Main Workflow of Extension', () => {
     console.log("scan finished (success)");
     let patchedImageText = "";
     const evalText = await patchedImageElement?.evaluate(element => element.textContent);
-    if (evalText !== null) {
+    if (evalText !== null && evalText !== undefined) {
       patchedImageText = evalText;
       console.log('created patched image: ' + evalText);
     }
