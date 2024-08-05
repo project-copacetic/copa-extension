@@ -218,6 +218,7 @@ export function CopaInput(props: any) {
               props.patchImage();
             }
           }}
+          id='scan-or-patch-image-button'
         >
           {props.vulnState === VULN_LOADED ? "Patch Image" : "Scan Image"}
         </Button>
