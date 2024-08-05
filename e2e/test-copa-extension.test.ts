@@ -56,6 +56,15 @@ describe('Test Logs Explorer UI', () => {
       'projectcopacetic/copacetic-docker-desktop-extension',
     );
 
-    console.log(eFrame);
+    const imageInput = await eFrame.waitForSelector("#image-select-combo-box");
+
+    await imageInput.fill('nginx:1.21.6');
+    await imageInput.dispose();
+
+    const scanPatchImageButton = await eFrame.waitForSelector('#scan-or-patch-image-button');
+    await scanPatchImageButton.click();
+    
+
+
   });
 });
