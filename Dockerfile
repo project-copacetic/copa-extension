@@ -1,15 +1,3 @@
-FROM golang:1.22-alpine@sha256:0d3653dd6f35159ec6e3d10263a42372f6f194c3dea0b35235d72aabde86486e AS builder
-ENV CGO_ENABLED=0
-WORKDIR /backend
-COPY backend/go.* .
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go mod download
-COPY backend/. .
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -ldflags="-s -w" -o bin/service
-
 FROM --platform=$BUILDPLATFORM node:21.6-alpine3.18@sha256:911976032e5e174fdd8f5fb63d7089b09d59d21dba3df2728c716cbb88c7b821 AS client-builder
 WORKDIR /ui
 # cache packages in layer
@@ -54,7 +42,6 @@ LABEL org.opencontainers.image.title="Copacetic" \
     com.docker.extension.categories="security" \
     com.docker.extension.changelog="Initial version."
 
-COPY --from=builder /backend/bin/service /
 COPY docker-compose.yaml .
 COPY metadata.json .
 COPY copa-color.svg .
