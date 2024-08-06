@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Install and start Docker Desktop
-        uses: docker/desktop-action/start@v0.3.6
+        uses: docker/desktop-action/start@ca8f1a94b6716d5b278b081b654fbb7cd0b8fdb3 # v0.3.6
 
       - name: Change Desktop settings and allow installing non marketplace extensions
         run: |
@@ -30,11 +30,14 @@ jobs:
         shell: bash
         run: |
           sudo fuser -k -n tcp 8084
+
       - name: Enable corepack
         run: corepack enable
-      - uses: actions/setup-node@v4
+
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
         with:
           node-version: "20"
+
       - name: Run E2E tests
         env:
           SKIP_EXTENSION_IMAGE_BUILD: true
