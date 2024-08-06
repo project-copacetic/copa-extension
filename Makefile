@@ -1,4 +1,4 @@
-IMAGE?=projectcopacetic/copacetic-docker-desktop-extension
+IMAGE?=jgrerr/copacetic-docker-desktop-extension
 TAG?=0.1.0
 COPA_VERSION?=latest
 CHANGELOG?=default
