@@ -125,7 +125,7 @@ export function App() {
     const fetchCopaVersion = async () => {
       const latestVersion = await getLatestCopaVerison();
       setLatestCopaVerison(latestVersion);
-    } 
+    }
     fetchCopaVersion();
   }, []);
 
@@ -365,7 +365,7 @@ export function App() {
         <CircularProgress size={100} />
         <Stack direction="row">
           {showCommandLineButton}
-          <Typography variant="h6" sx={{ maxWidth: 400 }}>Patching Image...</Typography>
+          <Typography variant="h6" sx={{ maxWidth: 400 }} id='loading-patch-text'>Patching Image...</Typography>
         </Stack>
         <Collapse unmountOnExit in={showCommandLine}>
           <CommandLine totalOutput={totalOutput}></CommandLine>
@@ -385,7 +385,7 @@ export function App() {
         <Typography align='center' variant="h6">Created new patched image</Typography>
         <Stack direction="row">
           {showCommandLineButton}
-          <Typography align='center' variant="h6">{selectedImage}!</Typography>
+          <Typography align='center' variant="h6" id="new-patched-image-name-text">{selectedImage}!</Typography>
         </Stack>
       </Stack>
       <Collapse unmountOnExit in={showCommandLine}>
