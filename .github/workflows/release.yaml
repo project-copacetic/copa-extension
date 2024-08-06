@@ -45,7 +45,7 @@ jobs:
             env:
               GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             run : |
-              gh release create "${{ github.event.inputs.release_version }}" --generate-notes
+              gh release create "${{ github.event.inputs.release_version }}" --generate-notes > notes.txt
 
           - name: Login to Docker Hub
             uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
@@ -57,5 +57,6 @@ jobs:
             run: |
               version=${{ github.event.inputs.release_version }}
               version_no_v=$(echo "$version" | cut -c2-)
-              make push-extension TAG=$version_no_v
+              changelog_text=$(cat notes.txt)
+              make push-extension TAG=$version_no_v CHANGELOG=changelog_text
 
