@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine@sha256:3fadfe4dc99c79299b248a0a35a7b47a875524ee7aaa23adaa757473464cc590 AS builder
+FROM golang:1.22-alpine@sha256:0d3653dd6f35159ec6e3d10263a42372f6f194c3dea0b35235d72aabde86486e AS builder
 ENV CGO_ENABLED=0
 WORKDIR /backend
 COPY backend/go.* .
