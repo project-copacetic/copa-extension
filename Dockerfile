@@ -40,7 +40,7 @@ LABEL org.opencontainers.image.title="Copacetic" \
     {"title":"Extension Repository","url":"https://github.com/project-copacetic/copa-extension"} \
     ]' \
     com.docker.extension.categories="security" \
-    com.docker.extension.changelog="Initial version."
+    com.docker.extension.changelog=$CHANGELOG
 
 COPY docker-compose.yaml .
 COPY metadata.json .
