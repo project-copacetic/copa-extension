@@ -3,60 +3,78 @@ on:
   workflow_dispatch:
     inputs:
       release_version:
-        description: 'Which version are we releasing? (format vX.Y.Z)'
+        description: "Which version are we releasing? (format vX.Y.Z)"
         required: true
 
 permissions:
   contents: write
 
 jobs:
-    release:
-        name: "release"
-        runs-on: ubuntu-latest
-        steps:
-          - name: Harden Runner
-            uses: step-security/harden-runner@0d381219ddf674d61a7572ddd19d7941e271515c # v2.9.0
-            with:
-              egress-policy: audit
+  release:
+    name: "release"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0d381219ddf674d61a7572ddd19d7941e271515c # v2.9.0
+        with:
+          egress-policy: audit
 
-          - name: Checkout repo
-            uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-            with:
-              fetch-depth: 0  
+      - name: Checkout repo
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
 
-          - name: Configure github-actions[bot]
-            run: |
-              git config user.name 'github-actions[bot]'
-              git config user.email 'github-actions[bot]@users.noreply.github.com'
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version: "20"
 
-          - name: Generate and Push Tags
-            run: |
-              version=${{ github.event.inputs.release_version }}
-              major=$(echo $version | cut -d. -f1)
-              minor=$(echo $version | cut -d. -f1-2)
+      - name: Configure github-actions[bot]
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
 
-              git tag $version
-              git tag $minor -f
+      - name: Generate and Push Tags
+        run: |
+          version=${{ github.event.inputs.release_version }}
+          major=$(echo $version | cut -d. -f1)
+          minor=$(echo $version | cut -d. -f1-2)
 
-              git tag $major -f
-              git push --set-upstream origin --tags -f
-              
-          - name: Create GitHub release
-            env:
-              GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            run : |
-              gh release create "${{ github.event.inputs.release_version }}" --generate-notes > notes.txt
+          git tag $version
+          git tag $minor -f
 
-          - name: Login to Docker Hub
-            uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
-            with:
-              username: ${{ secrets.DOCKERHUB_USERNAME }}
-              password: ${{ secrets.DOCKERHUB_TOKEN }}
+          git tag $major -f
+          git push --set-upstream origin --tags -f
 
-          - name: Push Extension Image
-            run: |
-              version=${{ github.event.inputs.release_version }}
-              version_no_v=$(echo "$version" | cut -c2-)
-              changelog_text=$(cat notes.txt)
-              make push-extension TAG=$version_no_v CHANGELOG=changelog_text
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.event.inputs.release_version }}" --generate-notes
 
+      - name: Get Release Notes
+        id: get_release_notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          notes=$(gh release view "${{ github.event.inputs.release_version }}" --json body -q .body)
+          echo "$notes" > release_notes.md
+
+      - name: Install showdown
+        run: |
+          npm install -g showdown
+
+      - name: Convert from markdown to html
+        run: |
+          showdown makehtml -i release_notes.md -o release_notes.html
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Extension Image
+        run: |
+          version=${{ github.event.inputs.release_version }}
+          version_no_v=$(echo "$version" | cut -c2-)
+          make push-extension TAG=$version_no_v CHANGELOG=release_notes.html
