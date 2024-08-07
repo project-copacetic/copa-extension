@@ -13,6 +13,7 @@ COPY ui /ui
 RUN npm run build
 
 FROM alpine
+ARG CHANGELOG
 LABEL org.opencontainers.image.title="Copacetic" \
     org.opencontainers.image.description="Directly patch container images given the vulnerability scanning results from popular tools like Trivy." \
     org.opencontainers.image.vendor="Project Copacetic" \
@@ -40,7 +41,7 @@ LABEL org.opencontainers.image.title="Copacetic" \
     {"title":"Extension Repository","url":"https://github.com/project-copacetic/copa-extension"} \
     ]' \
     com.docker.extension.categories="security" \
-    com.docker.extension.changelog=$CHANGELOG
+    com.docker.extension.changelog=${CHANGELOG}
 
 COPY docker-compose.yaml .
 COPY metadata.json .
