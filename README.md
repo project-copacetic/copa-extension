@@ -10,13 +10,7 @@ This extension allows the user to leverage the abilities of the CLI tool without
 
 ## How do install it?
 
-The extension be installed using this [link](https://open.docker.com/extensions/marketplace?extensionId=projectcopacetic/copacetic-docker-desktop-extension&tag=0.1.0)! 
-
-It can also be installed with the following command:
-
-```
-docker extension install projectcopacetic/copacetic-docker-desktop-extension:0.1.0
-```
+After installing Docker Desktop, the extension be installed using this [link](https://open.docker.com/extensions/marketplace?extensionId=projectcopacetic/copacetic-docker-desktop-extension)! 
 
 ## How does it work?
 
