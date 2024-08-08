@@ -6,8 +6,6 @@ COPY ui/package-lock.json /ui/package-lock.json
 RUN --mount=type=cache,target=/usr/src/app/.npm \
     npm set cache /usr/src/app/.npm && \
     npm ci
-# install mui icons
-RUN npm install @mui/icons-material
 
 COPY ui /ui
 RUN npm run build
