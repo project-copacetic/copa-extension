@@ -24,9 +24,9 @@ make install-extension
 ```
 After following the steps, the extension should be successfully installed in Docker Desktop. If you make any changes to the code, run `make update-extension` to see those changes reflected. 
 
-## Install node packages locally
+## Install node packages locally (optional)
 
-To use IntelliSense features (code completion, parameter info, quick info, and member lists), you need to install the node and yarn packages locally.
+To use Visual Studio Code IntelliSense features (code completion, parameter info, quick info, and member lists), you need to install the node and yarn packages locally.
 
 After installing [Node.js](https://nodejs.org/en/download/package-manager/), change to the `/ui` directory and run the following command:
 
