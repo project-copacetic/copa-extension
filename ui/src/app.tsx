@@ -1,7 +1,6 @@
 // src/App.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Autocomplete,
   Button,
   Box,
   Stack,
@@ -9,16 +8,8 @@ import {
   Divider,
   Link,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   IconButton,
-  Grow,
   Collapse,
-  Paper,
-  LinearProgress
 } from '@mui/material';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { CopaInput } from './copainput';
@@ -45,8 +36,6 @@ export function App() {
   const learnMoreLink = "https://project-copacetic.github.io/copacetic/website/";
 
   const ddClient = createDockerDesktopClient();
-  // The correct image name of the currently selected image. The latest tag is added if there is no tag.
-  const [imageName, setImageName] = useState("");
 
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -56,7 +45,20 @@ export function App() {
   const [totalOutput, setTotalOutput] = useState("");
   const [errorText, setErrorText] = useState("");
   const [useContainerdChecked, setUseContainerdChecked] = useState(false);
-  const [latestCopaVersion, setLatestCopaVerison] = useState("v0.7.0");
+  const [latestCopaVersion, setLatestCopaVerison] = useState("v0.12.0");
+
+  // New flags for v0.11.1+ features
+  const [pushToRegistry, setPushToRegistry] = useState<boolean>(false);
+  const [exitOnEol, setExitOnEol] = useState<boolean>(false);
+  const [eolApiUrl, setEolApiUrl] = useState<string>("default");
+  const [selectedPlatform, setSelectedPlatform] = useState<string>("all");
+  const [ignoreErrors, setIgnoreErrors] = useState<boolean>(false);
+  const [progressMode, setProgressMode] = useState<string>("auto");
+
+  // New flags for v0.12.0 features
+  const [ociDir, setOciDir] = useState<string>("");
+  const [pkgTypes, setPkgTypes] = useState<string>("os");
+  const [libraryPatchLevel, setLibraryPatchLevel] = useState<string>("patch");
 
   const [inSettings, setInSettings] = useState(false);
   const [showPreload, setShowPreload] = useState(true);
@@ -79,35 +81,76 @@ export function App() {
   });
 
   const getTrivyOutput = async () => {
+    try {
+      // Clean up any existing busybox container first
+      await ddClient.docker.cli.exec("rm", [
+        "-f",
+        `${BUSYBOX_CONTAINER_NAME}`
+      ]);
 
-    const output = await ddClient.docker.cli.exec("run", [
-      "-v",
-      "copa-extension-volume:/data",
-      "--name",
-      `${BUSYBOX_CONTAINER_NAME}`,
-      "busybox",
-      "cat",
-      `data/${JSON_FILE_NAME}`
-    ]);
-    const data = JSON.parse(output.stdout);
-    const severityMap: Record<string, number> = {
-      "UNKNOWN": 0,
-      "LOW": 0,
-      "MEDIUM": 0,
-      "HIGH": 0,
-      "CRITICAL": 0
-    };
-    if (data.Results) {
-      for (const result of data.Results) {
-        if (result.Vulnerabilities) {
-          for (const vulnerability of result.Vulnerabilities) {
-            severityMap[vulnerability.Severity]++;
+      // Read the scan file in chunks and process in JavaScript
+      // This is the ONLY way that works with the Docker Extension SDK restrictions
+      const severityMap: Record<string, number> = {
+        "UNKNOWN": 0,
+        "LOW": 0,
+        "MEDIUM": 0,
+        "HIGH": 0,
+        "CRITICAL": 0
+      };
+
+      // Read the scan file in chunks to avoid buffer overflow issues with large files
+      // The Docker Extension SDK has stdout buffer limits (~200KB) which fail for images
+      // with many vulnerabilities. We work around this by reading the file in chunks.
+      let allContent = "";
+      let lineNum = 1;
+      const chunkSize = 1000; // Read 1000 lines at a time
+
+      while (true) {
+        try {
+          const chunk = await ddClient.docker.cli.exec("run", [
+            "--rm",
+            "-v",
+            "copa-extension-volume:/data",
+            "busybox",
+            "sed",
+            "-n",
+            `${lineNum},${lineNum + chunkSize - 1}p`,
+            "/data/" + JSON_FILE_NAME
+          ]);
+
+          if (!chunk.stdout || chunk.stdout.length === 0) {
+            break; // End of file reached
+          }
+
+          allContent += chunk.stdout;
+          lineNum += chunkSize;
+        } catch (err) {
+          break; // End of file or error
+        }
+      }
+
+      // Parse JSON and count vulnerabilities
+      const data = JSON.parse(allContent);
+
+      if (data.Results) {
+        for (const result of data.Results) {
+          if (result.Vulnerabilities) {
+            for (const vulnerability of result.Vulnerabilities) {
+              const sev = vulnerability.Severity || "UNKNOWN";
+              severityMap[sev]++;
+            }
           }
         }
       }
+
+      setVulnerabilityCount(severityMap);
+      setVulnState(VULN_LOADED);
+    } catch (error) {
+      console.error("Failed to get Trivy output:", error);
+      setVulnState(VULN_UNLOADED);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      ddClient.desktopUI.toast.error(`Failed to parse scan results: ${errorMessage}`);
     }
-    setVulnerabilityCount(severityMap);
-    setVulnState(VULN_LOADED);
   };
 
   // -- Effects --
@@ -143,6 +186,15 @@ export function App() {
     setSelectedScanner("trivy");
     setSelectedImageTag("");
     setSelectedTimeout("5m");
+    setPushToRegistry(false);
+    setExitOnEol(false);
+    setEolApiUrl("default");
+    setSelectedPlatform("all");
+    setIgnoreErrors(false);
+    setProgressMode("auto");
+    setOciDir("");
+    setPkgTypes("os");
+    setLibraryPatchLevel("patch");
     setVulnerabilityCount({
       "UNKNOWN": 0,
       "LOW": 0,
@@ -194,9 +246,11 @@ export function App() {
       `${TRIVY_CONTAINER_NAME}`,
       "aquasec/trivy",
       "image",
-      "--vuln-type",
-      "os",
+      "--pkg-types",
+      pkgTypes,  // Use dynamic package types (os, library, or os,library)
       "--ignore-unfixed",
+      "--scanners",
+      "vuln",
       "--format",
       "json",
       "-o",
@@ -243,7 +297,17 @@ export function App() {
         `${getImageTag()}`,
         `${selectedTimeout === undefined ? "5m" : selectedTimeout}`,
         `${useContainerdChecked ? 'custom-socket' : 'buildx'}`,
-        "openvex"
+        "openvex",
+        "",  // output_file (empty for now)
+        `${pushToRegistry}`,
+        `${exitOnEol}`,
+        `${eolApiUrl}`,
+        `${selectedPlatform}`,
+        `${ignoreErrors}`,
+        `${progressMode}`,
+        `${ociDir}`,  // v0.12.0: OCI directory
+        `${pkgTypes}`,  // v0.12.0: Package types
+        `${libraryPatchLevel}`  // v0.12.0: Library patch level
       ];
       ({ stdout, stderr } = await runCopa(commandParts, stdout, stderr));
     }
@@ -267,10 +331,10 @@ export function App() {
             }
             setTotalOutput(tOutput);
           },
-          onClose(exitCode: number) {
+          async onClose(exitCode: number) {
             if (exitCode == 0) {
               ddClient.desktopUI.toast.success(`Trivy scan finished`);
-              getTrivyOutput();
+              await getTrivyOutput();
             } else if (exitCode !== 137) {
               setVulnState(VULN_UNLOADED);
               ddClient.desktopUI.toast.error(`Trivy scan failed: ${stderr}`);
@@ -494,6 +558,24 @@ export function App() {
             getTrivyOutput={getTrivyOutput}
             vulnState={vulnState}
             setVulnState={setVulnState}
+            pushToRegistry={pushToRegistry}
+            setPushToRegistry={setPushToRegistry}
+            exitOnEol={exitOnEol}
+            setExitOnEol={setExitOnEol}
+            eolApiUrl={eolApiUrl}
+            setEolApiUrl={setEolApiUrl}
+            selectedPlatform={selectedPlatform}
+            setSelectedPlatform={setSelectedPlatform}
+            ignoreErrors={ignoreErrors}
+            setIgnoreErrors={setIgnoreErrors}
+            progressMode={progressMode}
+            setProgressMode={setProgressMode}
+            ociDir={ociDir}
+            setOciDir={setOciDir}
+            pkgTypes={pkgTypes}
+            setPkgTypes={setPkgTypes}
+            libraryPatchLevel={libraryPatchLevel}
+            setLibraryPatchLevel={setLibraryPatchLevel}
           />}
         {showLoading && loadingPage}
         {showSuccess && successPage}

@@ -189,6 +189,142 @@ export function CopaInput(props: any) {
                 props.setSelectedTimeout(event.target.value);
               }}
             />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={props.pushToRegistry}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    props.setPushToRegistry(event.target.checked);
+                  }}
+                />
+              }
+              label="Push to registry after patching"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={props.exitOnEol}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    props.setExitOnEol(event.target.checked);
+                  }}
+                />
+              }
+              label="Exit on End-of-Life OS detection"
+            />
+            <TextField
+              id="eol-api-url-input"
+              label="EOL API URL (optional)"
+              placeholder="https://endoflife.date/api/v1/products"
+              value={props.eolApiUrl === "default" ? "" : props.eolApiUrl}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                props.setEolApiUrl(event.target.value || "default");
+              }}
+              helperText="Leave empty to use default EOL API"
+            />
+            <FormControl fullWidth>
+              <InputLabel id="platform-select-label">Platform</InputLabel>
+              <Select
+                labelId="platform-select-label"
+                id="platform-select"
+                value={props.selectedPlatform}
+                label="Platform"
+                onChange={(event: SelectChangeEvent) => {
+                  props.setSelectedPlatform(event.target.value as string);
+                }}
+              >
+                <MenuItem value="all">All platforms</MenuItem>
+                <MenuItem value="linux/amd64">linux/amd64</MenuItem>
+                <MenuItem value="linux/arm64">linux/arm64</MenuItem>
+                <MenuItem value="linux/arm/v7">linux/arm/v7</MenuItem>
+                <MenuItem value="linux/arm/v6">linux/arm/v6</MenuItem>
+                <MenuItem value="linux/386">linux/386</MenuItem>
+                <MenuItem value="linux/ppc64le">linux/ppc64le</MenuItem>
+                <MenuItem value="linux/s390x">linux/s390x</MenuItem>
+                <MenuItem value="linux/riscv64">linux/riscv64</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={props.ignoreErrors}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    props.setIgnoreErrors(event.target.checked);
+                  }}
+                />
+              }
+              label="Ignore errors (continue patching on failure)"
+            />
+            <FormControl fullWidth>
+              <InputLabel id="progress-select-label">Progress Display</InputLabel>
+              <Select
+                labelId="progress-select-label"
+                id="progress-select"
+                value={props.progressMode}
+                label="Progress Display"
+                onChange={(event: SelectChangeEvent) => {
+                  props.setProgressMode(event.target.value as string);
+                }}
+              >
+                <MenuItem value="auto">Auto</MenuItem>
+                <MenuItem value="plain">Plain</MenuItem>
+                <MenuItem value="tty">TTY</MenuItem>
+                <MenuItem value="quiet">Quiet</MenuItem>
+                <MenuItem value="rawjson">Raw JSON</MenuItem>
+              </Select>
+            </FormControl>
+            <Divider />
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+              v0.12.0 Features
+            </Typography>
+            <TextField
+              id="oci-dir-input"
+              label="OCI Directory (optional)"
+              placeholder="/path/to/oci/layout"
+              value={props.ociDir}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                props.setOciDir(event.target.value);
+              }}
+              helperText="Local directory for OCI layout (for multi-platform local patching)"
+            />
+            <FormControl fullWidth>
+              <InputLabel id="pkg-types-select-label">Package Types</InputLabel>
+              <Select
+                labelId="pkg-types-select-label"
+                id="pkg-types-select"
+                value={props.pkgTypes}
+                label="Package Types"
+                onChange={(event: SelectChangeEvent) => {
+                  props.setPkgTypes(event.target.value as string);
+                }}
+              >
+                <MenuItem value="os">OS packages only</MenuItem>
+                <MenuItem value="library">Library packages only (Experimental)</MenuItem>
+                <MenuItem value="os,library">OS + Library packages (Experimental)</MenuItem>
+              </Select>
+            </FormControl>
+            {(props.pkgTypes === "library" || props.pkgTypes === "os,library") && (
+              <Stack spacing={1}>
+                <FormControl fullWidth>
+                  <InputLabel id="library-patch-level-select-label">Library Patch Level</InputLabel>
+                  <Select
+                    labelId="library-patch-level-select-label"
+                    id="library-patch-level-select"
+                    value={props.libraryPatchLevel}
+                    label="Library Patch Level"
+                    onChange={(event: SelectChangeEvent) => {
+                      props.setLibraryPatchLevel(event.target.value as string);
+                    }}
+                  >
+                    <MenuItem value="patch">Patch (most conservative)</MenuItem>
+                    <MenuItem value="minor">Minor (allow minor updates)</MenuItem>
+                    <MenuItem value="major">Major (allow breaking changes)</MenuItem>
+                  </Select>
+                </FormControl>
+                <Typography variant="caption" color="warning.main" sx={{ fontStyle: 'italic' }}>
+                  ⚠️ App-level patching is experimental. Supports Python and Node.js packages.
+                </Typography>
+              </Stack>
+            )}
           </Stack>
         </Grow>
       </Collapse>
